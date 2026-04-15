@@ -12,6 +12,34 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 /**
+ * 提取响应内容的辅助函数
+ * 处理字符串、数组和对象格式的内容
+ */
+function extractContent(content: any): string {
+    if (typeof content === 'string') {
+        return content;
+    }
+
+    if (Array.isArray(content)) {
+        return content.map(block => {
+            if (typeof block === 'string') {
+                return block;
+            }
+            if (block && typeof block === 'object') {
+                return block.text || '';
+            }
+            return '';
+        }).join('');
+    }
+
+    if (content && typeof content === 'object') {
+        return content.text || String(content);
+    }
+
+    return String(content);
+}
+
+/**
  * 创建 MiniMax 模型实例 (使用 Anthropic API 兼容模式)
  */
 function createMiniMaxModel(modelName: string = "MiniMax-M2.7") {
@@ -46,7 +74,7 @@ async function basicChatExample() {
         new HumanMessage("你好，请用一句话介绍一下你自己。"),
     ]);
 
-    console.log("MiniMax 回复:", response.content);
+    console.log("MiniMax 回复:", extractContent(response.content));
     console.log("\n");
 }
 
@@ -67,7 +95,7 @@ async function multiTurnChatExample() {
     for (const message of conversation) {
         console.log("用户:", message.content);
         const response = await model.invoke([message]);
-        console.log("GPT:", response.content);
+        console.log("MiniMax:", extractContent(response.content));
         console.log();
     }
 }
@@ -93,12 +121,14 @@ async function structuredOutputExample() {
 
     const response = await model.invoke([new HumanMessage(prompt)]);
 
-    console.log("GPT 回复:");
-    console.log(response.content);
+    const content = extractContent(response.content);
+
+    console.log("MiniMax 回复:");
+    console.log(content);
 
     try {
         // 尝试解析 JSON
-        const parsed = JSON.parse(response.content as string);
+        const parsed = JSON.parse(content);
         console.log("\n解析后的结构化数据:");
         console.log(JSON.stringify(parsed, null, 2));
     } catch (e) {
@@ -121,11 +151,13 @@ async function streamingChatExample() {
         new HumanMessage("请用三句话介绍一下 LangChain 框架。"),
     ]);
 
-    console.log("GPT 流式回复:");
+    console.log("MiniMax 流式回复:");
     console.log();
     for await (const chunk of stream) {
-        const content = typeof chunk.content === 'string' ? chunk.content : String(chunk.content);
-        process.stdout.write(content);
+        const content = extractContent(chunk.content);
+        if (content) {
+            process.stdout.write(content);
+        }
     }
 
     console.log("\n\n");
@@ -136,7 +168,7 @@ async function streamingChatExample() {
  */
 async function main() {
     console.log("🚀 LangChain + MiniMax (Anthropic API) 模型示例\n");
-    console.log("使用模型: claude-3-5-sonnet-20241022 (通过 MiniMax Anthropic API)");
+    console.log("使用模型: MiniMax-M2.7 (通过 MiniMax Anthropic API)");
     console.log("API 地址: https://api.minimaxi.com/anthropic\n");
 
     try {

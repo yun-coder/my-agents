@@ -506,8 +506,8 @@ async function semanticSearchDemo() {
     );
     console.log(formatSearchResults(tagFilteredResults));
 
-    // 示例 5: 使用 GPT 生成智能推荐
-    console.log("🤖 示例 5: 基于 GPT 的智能推荐");
+    // 示例 5: 使用 MiniMax 生成智能推荐
+    console.log("🤖 示例 5: 基于 MiniMax 的智能推荐");
     console.log("=".repeat(50));
 
     const model = createMiniMaxModel();
