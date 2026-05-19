@@ -1,0 +1,12 @@
+{
+  "openai": {
+    "api_key": "your-api-key",
+    "base_url": "https://your-api-provider.example.com/v1",
+    "model": "gpt-4.1-mini"
+  },
+  "langsmith": {
+    "tracing": false,
+    "api_key": "",
+    "project": "prompt"
+  }
+}
