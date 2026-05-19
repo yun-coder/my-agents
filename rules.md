@@ -63,3 +63,46 @@
 * 可以通过多种方式向提示中添加额外上下文，例如查询向量数据库并将返回的文本包含在提示中
 
 * Planning for the context window 规划上下文窗口
+* 模型在生成请求期间所能处理的数据量是有限的，并且只能处理其所考虑的上下文范围内的数据。这种内存限制被称为上下文窗口 ，它是根据标记 （您传入的数据块，从文本到图像）来定义的。
+
+
+# GPT-5 提示最佳实践
+  
+* Coding 编码
+  * 定义代理的角色，通过示例强制使用结构化工具，要求进行彻底的正确性测试，并设置 Markdown 标准以获得清晰的输出。
+  * 明确的角色和工作流程指导
+  * 测试与验证 指示模型使用单元测试或 Python 命令测试更改，并仔细验证补丁，因为像 apply_patch 这样的工具即使失败也可能返回“完成”。
+  * 工具使用示例 提供使用所提供函数调用命令的具体示例，这可以提高可靠性并符合预期的工作流程。
+  * Markdown 标准 引导模型生成清晰、语义正确的 Markdown，在适当情况下使用内联代码、代码栅栏、列表和表格，并使用反引号格式化文件路径、函数和类。
+
+* Front-end engineering 前端工程
+  * GPT-5 既擅长从零开始构建前端，也擅长为大型成熟的代码库做出贡献。为了获得最佳效果，我们建议使用以下库：
+    Styling / UI: Tailwind CSS, shadcn/ui, Radix Themes
+    样式/用户界面： Tailwind CSS、shadcn/ui、Radix Themes
+    Icons: Lucide, Material Symbols, Heroicons
+    图标： Lucide、物质符号、英雄图标
+    Animation: Motion
+    动画 ：运动
+
+  * Principles: Set visual quality standards, use modular/reusable components, and keep design consistent.
+    原则： 设定视觉质量标准，使用模块化/可重用组件，并保持设计一致性。
+    UI/UX: Specify typography, colors, spacing/layout, interaction states (hover, empty, loading), and accessibility.
+    UI/UX： 指定字体、颜色、间距/布局、交互状态（悬停、空白、加载中）和辅助功能。
+    Structure: Define file/folder layout for seamless integration.
+    结构： 定义文件/文件夹布局以实现无缝集成。
+    Components: Give reusable wrapper examples and backend-call separation strategies.
+    组件： 提供可重用的包装器示例和后端调用分离策略。
+    Pages: Provide templates for common layouts.
+    页面： 提供常用布局模板。
+    Agent Instructions: Ask the model to confirm design assumptions, scaffold projects, enforce standards, integrate APIs, test states, and document code.
+    代理指令： 要求模型确认设计假设、搭建项目框架、执行标准、集成 API、测试状态和记录代码。
+
+* Agentic tasks 代理任务
+  * 对于使用 GPT-5 的智能体和长期部署，请将提示重点放在三个核心实践上：
+    * 彻底规划任务以确保完全解决，为主要工具使用决策提供清晰的前提，并使用 TODO 工具以有条理的方式跟踪工作流程和进度。
+
+  * 计划和坚持 指示模型在交出控制权之前解决完整的查询，将其分解为子任务，并在每次工具调用后进行反思以确认完整性。
+
+  * Preambles for transparency 透明度前言 要求模型解释它为什么调用某个工具，但只在关键步骤进行解释。
+
+  * Progress tracking with rubrics and TODOs 使用评分标准和待办事项跟踪进度
