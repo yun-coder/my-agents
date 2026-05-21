@@ -106,3 +106,10 @@
   * Preambles for transparency 透明度前言 要求模型解释它为什么调用某个工具，但只在关键步骤进行解释。
 
   * Progress tracking with rubrics and TODOs 使用评分标准和待办事项跟踪进度
+
+  # Prompting reasoning models 提示推理模型
+
+    * A reasoning model is like a senior co-worker. You can give them a goal to achieve and trust them to work out the details.
+      推理模型就像一位资深同事。你可以给它设定一个目标，然后相信它能够解决细节问题。
+      A GPT model is like a junior coworker. They’ll perform best with explicit instructions to create a specific output.
+      GPT 模型就像一个初级同事。只有收到明确的指令来生成特定的输出，它们才能发挥最佳性能。

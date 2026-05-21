@@ -7,10 +7,15 @@ import os
 from pathlib import Path
 from typing import Any
 
-from openai import APIConnectionError, AuthenticationError, OpenAI, OpenAIError, RateLimitError
+from openai import (
+    APIConnectionError,
+    AuthenticationError,
+    OpenAI,
+    OpenAIError,
+    RateLimitError,
+)
 from langsmith import traceable
 from langsmith.wrappers import wrap_openai
-
 
 CONFIG_PATH = Path(__file__).with_name("dev.json")
 DEFAULT_MODEL = "gpt-4.1-mini"
@@ -78,15 +83,15 @@ def main() -> None:
         model = config.get("openai", {}).get("model", DEFAULT_MODEL)
 
         story = generate_bedtime_story(
-            client,
-            model,
-            "Write a one-sentence bedtime story about a unicorn."
+            client, model, "Write a one-sentence bedtime story about a unicorn."
         )
         print(story)
     except AuthenticationError:
         print("OpenAI authentication failed. Please check openai.api_key in dev.json.")
     except RateLimitError as exc:
-        print("OpenAI request failed: quota is insufficient or the rate limit was reached.")
+        print(
+            "OpenAI request failed: quota is insufficient or the rate limit was reached."
+        )
         print("Please check your OpenAI billing, plan, and usage limits.")
         print(f"Original error: {exc}")
     except APIConnectionError as exc:
