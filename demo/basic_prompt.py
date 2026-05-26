@@ -10,7 +10,7 @@ from typing import Any
 from openai import OpenAI
 
 
-CONFIG_PATH = Path(__file__).with_name("dev.json")
+CONFIG_PATH = Path(__file__).resolve().parent.parent / "dev.json"
 DEFAULT_PROMPT = "请用一句话介绍 Python。"
 
 

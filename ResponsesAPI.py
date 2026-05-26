@@ -18,7 +18,7 @@ from langsmith import traceable
 from langsmith.wrappers import wrap_openai
 
 CONFIG_PATH = Path(__file__).with_name("dev.json")
-DEFAULT_MODEL = "gpt-4.1-mini"
+DEFAULT_MODEL = "gpt-5.4-mini"
 
 
 def load_dev_config() -> dict[str, Any]:
@@ -46,12 +46,29 @@ def configure_langsmith(config: dict[str, Any]) -> None:
 def create_openai_client(config: dict[str, Any]) -> OpenAI:
     openai_config = config.get("openai", {})
     api_key = openai_config.get("api_key")
-    base_url = openai_config.get("base_url")
+    base_url = str(openai_config.get("base_url", "")).rstrip("/")
 
     if not api_key or api_key == "your-api-key":
         raise ValueError("Please set openai.api_key in dev.json.")
     if not base_url or base_url == "https://your-api-provider.example.com/v1":
         raise ValueError("Please set openai.base_url in dev.json.")
+    if "apifox.newapi.ai" in base_url:
+        raise ValueError(
+            "openai.base_url points to the NewAPI Apifox documentation page. "
+            "Copy the API Base URL from your NewAPI platform homepage instead; "
+            "it should look like https://your-platform.com/v1."
+        )
+    if "docs." in base_url:
+        raise ValueError(
+            "openai.base_url points to a documentation site. "
+            "Set it to the API root URL, for example https://api.openai.com/v1."
+        )
+    if base_url.endswith(("/chat/completions", "/responses")):
+        raise ValueError(
+            "openai.base_url must be an API root URL, not a full endpoint. "
+            "Use a value like https://api.openai.com/v1 instead of a path ending "
+            "in /chat/completions or /responses."
+        )
 
     return wrap_openai(
         OpenAI(
