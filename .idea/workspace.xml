@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="79ece872-efe3-4105-adc0-b127e5476adc" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/langSmith能力报告.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/ResponsesAPI.py" beforeDir="false" afterPath="$PROJECT_DIR$/ResponsesAPI.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/demo/basic_prompt.py" beforeDir="false" afterPath="$PROJECT_DIR$/demo/basic_prompt.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,7 +35,9 @@
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "git-widget-placeholder": "main",
-    "last_opened_file_path": "D:/学习院/Prompt",
+    "last_opened_file_path": "D:/学习院/my-agents",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
     "nodejs_package_manager_path": "npm",
     "vue.rearranger.settings.migration": "true"
   }
@@ -62,7 +61,8 @@
       <workItem from="1779352560422" duration="8598000" />
       <workItem from="1779675146303" duration="3972000" />
       <workItem from="1779764587144" duration="306000" />
-      <workItem from="1779764903340" duration="4026000" />
+      <workItem from="1779764903340" duration="4236000" />
+      <workItem from="1779774712587" duration="5493000" />
     </task>
     <servers />
   </component>
