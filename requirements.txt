@@ -1,2 +1,3 @@
 langsmith
 openai
+langfuse

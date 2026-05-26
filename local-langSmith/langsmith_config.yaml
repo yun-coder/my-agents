@@ -1,0 +1,85 @@
+config:
+  # 没有这个key后续安装了也没用
+  langsmithLicenseKey: ""
+  apiKeySalt: "ADgXsXnEVMhblrHk+0Yqn+EFnhZzzSO8ZSuPh0QetzY="
+  authType: mixed
+  initialOrgAdminEmail: "pandanzhangnj@gmail.com"
+  basicAuth:
+    enabled: true
+    initialOrgAdminPassword: "Zhang920710@!"
+    jwtSecret: "qU+oYUUb/OAvXJ/AR5FStgBfxFK68/z7iivUwZ1wTkY="
+
+  telemetry:
+    logs: false
+    metrics: false
+    traces: false
+
+commonEnv:
+  - name: PHONE_HOME_USAGE_REPORTING_ENABLED
+    value: "false"
+
+# Local validation only: Docker Desktop on this machine has 23GiB RAM.
+# The chart defaults are production-oriented and request more memory than this
+# single-node Kubernetes cluster can schedule.
+backend:
+  deployment:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 300m
+        memory: 1Gi
+
+platformBackend:
+  deployment:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 300m
+        memory: 1Gi
+
+ingestQueue:
+  deployment:
+    replicas: 1
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 300m
+        memory: 1Gi
+
+queue:
+  deployment:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 300m
+        memory: 1Gi
+
+postgres:
+  statefulSet:
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 2Gi
+      requests:
+        cpu: 300m
+        memory: 1Gi
+
+clickhouse:
+  statefulSet:
+    resources:
+      limits:
+        cpu: 2000m
+        memory: 4Gi
+      requests:
+        cpu: 1000m
+        memory: 2Gi
