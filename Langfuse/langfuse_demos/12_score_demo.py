@@ -1,9 +1,9 @@
-"""
-Demo: scores.
+﻿"""
+演示 12: score（评分）。
 
-Scores are evaluations attached to a trace or a specific observation. Langfuse
-supports numeric, boolean, categorical, and text-like feedback patterns. Use
-scores for user feedback, automated evals, quality gates, and regression tests.
+score 是附加到 trace 或特定 observation 上的评估结果。Langfuse
+支持数值型（NUMERIC）、布尔型（BOOLEAN）、类别型（CATEGORICAL）
+和文本型评分。评分可用于用户反馈、自动评估、质量门禁和回归测试。
 """
 
 from __future__ import annotations
@@ -16,27 +16,27 @@ def main() -> None:
 
     with langfuse.start_as_current_observation(
         as_type="generation",
-        name="scored-generation",
+        name="scored-generation",                    # 被评分的 generation
         model="mock-gpt-4o-mini",
-        input="What is the refund window?",
+        input="退款窗口是多久？",
     ) as generation:
-        generation.update(output="Refunds are available within 30 days.")
+        generation.update(output="退款在 30 天内可用。")
 
-        # Score the current generation observation.
+        # 对当前 span（generation observation）进行评分
         langfuse.score_current_span(
-            name="answer_relevance",
-            value=0.97,
-            data_type="NUMERIC",
-            comment="Directly answered the user question.",
+            name="answer_relevance",                  # 评分名称
+            value=0.97,                               # 分值
+            data_type="NUMERIC",                      # 数据类型：数值型
+            comment="直接回答了用户问题。",
             metadata={"evaluator": "mock-rule"},
         )
 
-        # Score the entire trace. A common use case is user feedback.
+        # 对整个 trace 进行评分。常见场景是用户反馈。
         langfuse.score_current_trace(
-            name="user_feedback",
-            value=1.0,
-            data_type="BOOLEAN",
-            comment="User clicked thumbs up in the UI.",
+            name="user_feedback",                     # 评分名称
+            value=1.0,                                # 分值
+            data_type="BOOLEAN",                      # 数据类型：布尔型
+            comment="用户在 UI 中点击了赞。",
         )
 
     flush_and_print(langfuse, "score-demo")

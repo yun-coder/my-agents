@@ -1,9 +1,9 @@
-"""
-Demo: @observe decorator instrumentation.
+﻿"""
+演示 13: @observe 装饰器方式。
 
-This is the quickest SDK-level way to let Langfuse observe normal Python
-functions. The decorator creates observations, captures function input/output,
-and propagates context to nested decorated calls.
+这是使用 SDK 让 Langfuse 观测普通 Python 函数的最快方式。
+装饰器自动创建 observation、捕获函数输入/输出，
+并将上下文传播到嵌套的被装饰调用。
 """
 
 from __future__ import annotations
@@ -15,29 +15,29 @@ from _common import flush_and_print, get_configured_langfuse
 
 @observe(as_type="agent", name="decorated-support-agent")
 def run_agent(question: str) -> str:
-    # The parent agent observation is created automatically by @observe.
+    # 父级 agent observation 由 @observe 自动创建
     draft = call_model(question)
-    return f"Final answer: {draft}"
+    return f"最终答案: {draft}"
 
 
 @observe(as_type="generation", name="decorated-model-call")
 def call_model(prompt: str) -> str:
-    # For generation observations, enrich the automatically created observation
-    # with model and usage details. This is where you would copy provider usage.
+    # 对于 generation observation，用模型和用量详情丰富自动创建的 observation。
+    # 生产环境中应在此处复制 provider 返回的用量信息。
     langfuse = get_client()
-    result = "Refunds are available within 30 days."
+    result = "退款在 30 天内可用。"
     langfuse.update_current_generation(
         model="mock-gpt-4o-mini",
         input=prompt,
         output=result,
-        usage_details={"input": 9, "output": 8, "total": 17},
+        usage_details={"input": 9, "output": 8, "total": 17},  # token 用量
     )
     return result
 
 
 def main() -> None:
     langfuse = get_configured_langfuse()
-    print(run_agent("What is the refund window?"))
+    print(run_agent("退款窗口是多久？"))
     flush_and_print(langfuse, "observe-decorator-way-demo")
 
 

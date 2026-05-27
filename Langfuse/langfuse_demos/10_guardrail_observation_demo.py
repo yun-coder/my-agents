@@ -1,9 +1,8 @@
 """
-Demo: guardrail observation.
+演示 10: guardrail（护栏）类型 observation。
 
-Use guardrail observations for safety, compliance, policy, or schema checks.
-They are useful both before an LLM call and before returning an answer to a
-user.
+guardrail observation 用于安全、合规、策略或模式检查。
+它在 LLM 调用之前以及在向用户返回答案之前都很有用。
 """
 
 from __future__ import annotations
@@ -15,16 +14,16 @@ def main() -> None:
     langfuse = get_configured_langfuse()
 
     with langfuse.start_as_current_observation(
-        as_type="guardrail",
-        name="pii-output-check",
-        input={"answer": "Your invoice is ready in the billing portal."},
-        metadata={"policy": "no-sensitive-identifiers"},
-        version="guardrail-1.0.0",
+        as_type="guardrail",                          # observation 类型：guardrail
+        name="pii-output-check",                      # 名称：PII（个人身份信息）输出检查
+        input={"answer": "您的发票已在账单门户中准备好。"},
+        metadata={"policy": "no-sensitive-identifiers"},  # 策略：禁止敏感标识符
+        version="guardrail-1.0.0",                    # 版本号
     ) as guardrail:
-        passed = True
+        passed = True                                  # 检查是否通过
         guardrail.update(
-            output={"passed": passed, "violations": []},
-            level="DEFAULT" if passed else "WARNING",
+            output={"passed": passed, "violations": []},  # 输出：通过状态和违规列表
+            level="DEFAULT" if passed else "WARNING",     # 级别：通过=DEFAULT，未通过=WARNING
         )
 
     flush_and_print(langfuse, "guardrail-observation-demo")
