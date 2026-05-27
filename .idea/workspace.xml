@@ -2,12 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="79ece872-efe3-4105-adc0-b127e5476adc" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Prompt.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Prompt.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/dev.example.json" beforeDir="false" afterPath="$PROJECT_DIR$/dev.example.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/langSmith能力报告.md" beforeDir="false" afterPath="$PROJECT_DIR$/local-langSmith/langSmith能力报告.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/langsmith.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -146,7 +142,8 @@
       <workItem from="1779764903340" duration="4026000" />
       <workItem from="1779774944838" duration="6367000" />
       <workItem from="1779784728417" duration="6712000" />
-      <workItem from="1779799236601" duration="515000" />
+      <workItem from="1779799236601" duration="2475000" />
+      <workItem from="1779848078902" duration="344000" />
     </task>
     <servers />
   </component>
