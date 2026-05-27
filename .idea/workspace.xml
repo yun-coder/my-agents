@@ -3,6 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="79ece872-efe3-4105-adc0-b127e5476adc" name="Changes" comment="">
 <<<<<<< HEAD
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+=======
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
 =======
       <change beforePath="$PROJECT_DIR$/.idea/Prompt.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Prompt.iml" afterDir="false" />
@@ -12,6 +16,7 @@
       <change beforePath="$PROJECT_DIR$/langsmith.md" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
 >>>>>>> 20d432d3e81bfc6a34e5deb9e9ce1558b32f4cc9
+>>>>>>> 731fdecf079b594bef3d9a8b10b445c713ce0d07
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -173,8 +178,13 @@
       <workItem from="1779764903340" duration="4026000" />
       <workItem from="1779774944838" duration="6367000" />
       <workItem from="1779784728417" duration="6712000" />
+<<<<<<< HEAD
+      <workItem from="1779799236601" duration="2475000" />
+      <workItem from="1779848078902" duration="344000" />
+=======
       <workItem from="1779799236601" duration="515000" />
 >>>>>>> 20d432d3e81bfc6a34e5deb9e9ce1558b32f4cc9
+>>>>>>> 731fdecf079b594bef3d9a8b10b445c713ce0d07
     </task>
     <servers />
   </component>
