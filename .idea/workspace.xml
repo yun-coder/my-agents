@@ -2,8 +2,21 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="79ece872-efe3-4105-adc0-b127e5476adc" name="Changes" comment="">
+<<<<<<< HEAD
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+=======
+<<<<<<< HEAD
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+=======
+      <change beforePath="$PROJECT_DIR$/.idea/Prompt.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Prompt.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dev.example.json" beforeDir="false" afterPath="$PROJECT_DIR$/dev.example.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/langSmith能力报告.md" beforeDir="false" afterPath="$PROJECT_DIR$/local-langSmith/langSmith能力报告.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/langsmith.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
+>>>>>>> 20d432d3e81bfc6a34e5deb9e9ce1558b32f4cc9
+>>>>>>> 731fdecf079b594bef3d9a8b10b445c713ce0d07
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -35,6 +48,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
+<<<<<<< HEAD
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python.ResponsesAPI.executor": "Run",
+    "Python.basic_prompt.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/学习院/my-agents",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+=======
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
     &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
@@ -53,6 +84,7 @@
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+>>>>>>> 20d432d3e81bfc6a34e5deb9e9ce1558b32f4cc9
   }
 }</component>
   <component name="RecentsManager">
@@ -139,11 +171,20 @@
       <workItem from="1779352560422" duration="8598000" />
       <workItem from="1779675146303" duration="3972000" />
       <workItem from="1779764587144" duration="306000" />
+<<<<<<< HEAD
+      <workItem from="1779764903340" duration="4236000" />
+      <workItem from="1779774712587" duration="5493000" />
+=======
       <workItem from="1779764903340" duration="4026000" />
       <workItem from="1779774944838" duration="6367000" />
       <workItem from="1779784728417" duration="6712000" />
+<<<<<<< HEAD
       <workItem from="1779799236601" duration="2475000" />
       <workItem from="1779848078902" duration="344000" />
+=======
+      <workItem from="1779799236601" duration="515000" />
+>>>>>>> 20d432d3e81bfc6a34e5deb9e9ce1558b32f4cc9
+>>>>>>> 731fdecf079b594bef3d9a8b10b445c713ce0d07
     </task>
     <servers />
   </component>
