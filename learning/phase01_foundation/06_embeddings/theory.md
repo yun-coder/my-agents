@@ -1,4 +1,5 @@
 # 06 Embedding 模型
+# Vector embeddings   向量嵌入
 
 ## 学习目标
 

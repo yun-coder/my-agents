@@ -1,0 +1,23 @@
+[
+  {
+    "capability": "computer-use",
+    "risk_level": "high",
+    "score": 0.72,
+    "pass_threshold": 0.9,
+    "evidence": ["GUI 动作策略离线回归测试"]
+  },
+  {
+    "capability": "multimodal-request",
+    "risk_level": "medium",
+    "score": 0.95,
+    "pass_threshold": 0.9,
+    "evidence": ["文本与图片请求结构测试"]
+  },
+  {
+    "capability": "sft-dataset",
+    "risk_level": "medium",
+    "score": 1.0,
+    "pass_threshold": 1.0,
+    "evidence": ["SFT JSONL 结构校验"]
+  }
+]

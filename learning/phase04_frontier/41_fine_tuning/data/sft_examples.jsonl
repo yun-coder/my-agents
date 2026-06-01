@@ -1,0 +1,2 @@
+{"messages":[{"role":"system","content":"你是课程助教。"},{"role":"user","content":"什么是 thread_id？"},{"role":"assistant","content":"thread_id 用于标识可恢复的工作流线程。"}]}
+{"messages":[{"role":"user","content":"什么时候需要人工审批？"},{"role":"assistant","content":"发送、付款、删除等高风险动作应在执行前要求人工确认。"}]}
