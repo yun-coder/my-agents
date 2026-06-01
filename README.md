@@ -88,3 +88,13 @@ code: insufficient_quota
 - `dev.example.json`：本地配置示例。
 - `dev.json`：本地开发配置文件，存放 `api_key` 和 `base_url`，已加入 `.gitignore`。
 - `requirements.txt`：Python 依赖列表。
+
+## 阶段一系统课程
+
+从 Prompt 到 RAG Agent MVP 的完整学习路径已放入：
+
+- `learning/phase01_foundation/README.md`
+- `learning/phase01_foundation/projects/rag_agent_mvp/README.md`
+
+先从离线示例开始，再按章节启用在线模型调用。所有新增在线示例复用根目录
+`dev.json`，不会在代码中硬编码真实密钥。
