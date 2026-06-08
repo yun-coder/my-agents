@@ -1,0 +1,42 @@
+services:
+  agent-platform:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ../dev.json:/app/dev.json:ro
+    environment:
+      - CHROMA_DIR=/app/data/chroma
+      - LOG_LEVEL=INFO
+    restart: unless-stopped
+
+  langfuse-server:
+    image: ghcr.io/langfuse/langfuse:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@langfuse-db:5432/postgres
+      - NEXTAUTH_SECRET=mysecret
+      - NEXTAUTH_URL=http://localhost:3000
+      - SALT=mysalt
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+
+  langfuse-db:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - langfuse-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  langfuse-db-data:
