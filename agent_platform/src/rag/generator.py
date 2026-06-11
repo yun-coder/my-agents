@@ -63,26 +63,32 @@ class RAGGenerator:
 
     def generate(self, query: str) -> RAGAnswer:
         """执行完整 RAG 流程：检索 -> 生成回答。"""
-        docs = self.retrieve(query)
-        if not docs:
-            return RAGAnswer(answer="根据现有资料无法回答该问题。")
+        from ..observability import traced_operation
+        with traced_operation("rag.generate", input={"query": query}) as op:
+            docs = self.retrieve(query)
+            op.update(metadata={"retrieved": len(docs)})
 
-        context = self._retriever.format_context(docs)
-        sources = self._retriever.format_sources(docs)
+            if not docs:
+                return RAGAnswer(answer="根据现有资料无法回答该问题。")
 
-        messages = [
-            {"role": "system", "content": RAG_SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f"<资料>\n{context}\n</资料>\n\n问题：{query}",
-            },
-        ]
-        answer = self._llm.chat(messages)
-        return RAGAnswer(
-            answer=answer,
-            sources=sources,
-            context_docs=[d["text"] for d in docs],
-        )
+            context = self._retriever.format_context(docs)
+            sources = self._retriever.format_sources(docs)
+
+            messages = [
+                {"role": "system", "content": RAG_SYSTEM_PROMPT},
+                {
+                    "role": "user",
+                    "content": f"<资料>\n{context}\n</资料>\n\n问题：{query}",
+                },
+            ]
+            # LLMClient.chat 内部会自己开 llm.chat sub-span，自动嵌套在 rag.generate 下
+            answer = self._llm.chat(messages)
+            op.update(output=answer, metadata={"sources": sources})
+            return RAGAnswer(
+                answer=answer,
+                sources=sources,
+                context_docs=[d["text"] for d in docs],
+            )
 
     def generate_stream(self, query: str):
         """流式生成回答。"""

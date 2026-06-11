@@ -1,4 +1,5 @@
 services:
+  # —— 主应用 ——
   agent-platform:
     build: .
     ports:
@@ -7,36 +8,85 @@ services:
       - ./data:/app/data
       - ../dev.json:/app/dev.json:ro
     environment:
-      - CHROMA_DIR=/app/data/chroma
-      - LOG_LEVEL=INFO
+      CHROMA_DIR: /app/data/chroma
+      LOG_LEVEL: INFO
+    depends_on:
+      langfuse-server:
+        condition: service_started
     restart: unless-stopped
 
-  langfuse-server:
-    image: ghcr.io/langfuse/langfuse:latest
-    ports:
-      - "3000:3000"
+  # —— LangFuse v3 + Postgres + ClickHouse ——
+
+  langfuse-clickhouse:
+    image: clickhouse/clickhouse-server:23.8-alpine
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@langfuse-db:5432/postgres
-      - NEXTAUTH_SECRET=mysecret
-      - NEXTAUTH_URL=http://localhost:3000
-      - SALT=mysalt
-    depends_on:
-      langfuse-db:
-        condition: service_healthy
+      CLICKHOUSE_DB: default
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse_pass
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - langfuse-clickhouse-data:/var/lib/clickhouse
+      - ./data/clickhouse-keeper.xml:/etc/clickhouse-server/config.d/clickhouse-keeper.xml:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:8123/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
   langfuse-db:
     image: postgres:16-alpine
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
     volumes:
       - langfuse-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      # 显式 IPv4，避开 Windows / Linux 双栈下 localhost 走 [::1] 的坑
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+      start_period: 10s
+
+  langfuse-server:
+    image: langfuse/langfuse:3
+    ports:
+      - "3000:3000"
+    environment:
+      # 元数据 DB（projects / users / API keys / scores / prompts）
+      DATABASE_URL: postgresql://postgres:postgres@langfuse-db:5432/postgres
+      # ClickHouse —— trace / observation 事件（高吞吐列存）
+      CLICKHOUSE_URL: http://langfuse-clickhouse:8123
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse_pass
+      CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:clickhouse_pass@langfuse-clickhouse:9000
+      # NextAuth 鉴权
+      NEXTAUTH_SECRET: mysecret-change-in-prod
+      NEXTAUTH_URL: http://localhost:3000
+      SALT: mysalt-change-in-prod
+      # 允许公开注册（生产请关）
+      AUTH_DISABLE_SIGNUP: "false"
+      # 启用实验特性
+      ENABLE_EXPERIMENTAL_FEATURES: "true"
+    depends_on:
+      langfuse-db:
+        condition: service_healthy
+      langfuse-clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3000/api/public/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 60s
+    restart: unless-stopped
 
 volumes:
   langfuse-db-data:
+  langfuse-clickhouse-data:

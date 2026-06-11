@@ -32,10 +32,10 @@ class EmbeddingSettings:
 
 @dataclass(frozen=True)
 class LangFuseSettings:
-    enabled: bool
-    host: str
-    public_key: str
-    secret_key: str
+    enabled: bool = True
+    host: str = ""
+    public_key: str = ""
+    secret_key: str = ""
 
 
 @dataclass(frozen=True)
@@ -51,12 +51,15 @@ class AppConfig:
 
 
 def _load_dev_json() -> dict[str, Any]:
-    if not CONFIG_PATH.exists():
-        raise ConfigError(
-            f'缺少配置文件：{CONFIG_PATH}。请从 dev.example.json 创建 dev.json。'
-        )
-    with CONFIG_PATH.open('r', encoding='utf-8') as f:
-        return json.load(f)
+    # 优先级: dev.local.json > dev.json（local 不入库，放真密钥）
+    for name in ("dev.local.json", "dev.json"):
+        p = REPO_ROOT / name
+        if p.exists():
+            with p.open("r", encoding="utf-8") as f:
+                return json.load(f)
+    raise ConfigError(
+        f'缺少配置文件：{REPO_ROOT / "dev.json"}。请从 dev.example.json 创建。'
+    )
 
 
 def load_config() -> AppConfig:
@@ -81,10 +84,14 @@ def load_config() -> AppConfig:
     langfuse = None
     if lf_section:
         langfuse = LangFuseSettings(
-            enabled=os.getenv('LANGFUSE_ENABLED', 'true').lower() == 'true',
-            host=os.getenv('LANGFUSE_HOST', str(lf_section.get('host', ''))),
-            public_key=os.getenv('LANGFUSE_PUBLIC_KEY', str(lf_section.get('public_key', ''))),
-            secret_key=os.getenv('LANGFUSE_SECRET_KEY', str(lf_section.get('secret_key', ''))),
+            enabled=os.getenv('LANGFUSE_ENABLED',
+                              str(lf_section.get('enabled', True))).lower() == 'true',
+            host=os.getenv('LANGFUSE_HOST',
+                           str(lf_section.get('host', ''))),
+            public_key=os.getenv('LANGFUSE_PUBLIC_KEY',
+                                 str(lf_section.get('public_key', ''))),
+            secret_key=os.getenv('LANGFUSE_SECRET_KEY',
+                                 str(lf_section.get('secret_key', ''))),
         )
 
     return AppConfig(

@@ -5,4 +5,7 @@ __pycache__/
 .env/
 .venv/
 .vscode/
-local-langSmith/key.txt
+.claude/
+.agents/
+.ruff_cache/
+*.egg-info/

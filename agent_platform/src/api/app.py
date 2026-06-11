@@ -22,6 +22,13 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("Agent Platform 启动中...")
+    # 兜底 init_tracing —— 直接 uvicorn 启动不走 CLI 时也能开启追踪
+    try:
+        from src.observability import init_tracing
+        if init_tracing():
+            logger.info("LangFuse 追踪已就绪。")
+    except Exception as e:
+        logger.warning("LangFuse 初始化异常：%s", e)
     yield
     logger.info("Agent Platform 已关闭。")
 

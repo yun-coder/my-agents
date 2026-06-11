@@ -122,6 +122,24 @@ def cmd_agent(args) -> None:
     print(f"\n回答：{result.get('final_answer', '未能生成回答')}")
 
 
+def cmd_trace(args):
+    """完整流程追踪。"""
+    from src.workflow_trace import WorkflowTracer
+
+    tracer = WorkflowTracer()
+    print('Running RAG pipeline with full tracing...')
+    result = tracer.run(args.question, args.dir)
+    tracer.print_report()
+
+    if args.json:
+        import json
+        out = tracer.to_json()
+        out_path = 'workflow_trace.json'
+        with open(out_path, 'w', encoding='utf-8') as f:
+            f.write(out)
+        print(f'JSON exported to {out_path}')
+
+
 def cmd_serve(args) -> None:
     """启动 API 服务。"""
     import uvicorn
@@ -152,13 +170,20 @@ def main() -> None:
     agent_parser.add_argument("task", help="任务描述")
 
     # serve
+    trace_parser = subparsers.add_parser("trace", help="RAG 全流程追踪（含每步中间数据）")
+    trace_parser.add_argument("question", help="问题")
+    trace_parser.add_argument("--dir", default="data/documents", help="文档目录")
+    trace_parser.add_argument("--json", action="store_true", help="导出JSON报告")
+
     serve_parser = subparsers.add_parser("serve", help="启动 API 服务")
     serve_parser.add_argument("--host", default="0.0.0.0")
     serve_parser.add_argument("--port", type=int, default=8000)
 
     args = parser.parse_args()
 
-    if args.command == "ingest":
+    if args.command == "trace":
+        cmd_trace(args)
+    elif args.command == "ingest":
         cmd_ingest(args)
     elif args.command == "ask":
         cmd_ask(args)

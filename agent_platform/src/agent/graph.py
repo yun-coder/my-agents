@@ -90,6 +90,8 @@ class AgentWorkflow:
 
     def run(self, query: str, session_id: str = "default") -> AgentState:
         """执行 Agent 工作流，返回最终状态。"""
+        from ..observability import init_tracing, traced_operation
+        init_tracing()   # 兜底：万一 get_llm_client 还没被调用
         initial_state: AgentState = {
             "messages": self._memory.get_messages(),
             "query": query,
@@ -99,7 +101,18 @@ class AgentWorkflow:
             "tool_log": [],
             "error": "",
         }
-        result = self._graph.invoke(initial_state)
+        with traced_operation(
+            "agent.run",
+            input={"query": query, "session_id": session_id},
+        ) as op:
+            result = self._graph.invoke(initial_state)
+            op.update(
+                output=result.get("final_answer", ""),
+                metadata={
+                    "iterations": result.get("iteration_count", 0),
+                    "tools_used": len(result.get("tool_log", [])),
+                },
+            )
         if result.get("final_answer"):
             self._memory.add("user", query)
             self._memory.add("assistant", result["final_answer"])

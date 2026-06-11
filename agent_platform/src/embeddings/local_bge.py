@@ -10,8 +10,6 @@ import logging
 from functools import lru_cache
 from typing import Protocol
 
-import numpy as np
-
 logger = logging.getLogger(__name__)
 
 

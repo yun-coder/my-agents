@@ -26,7 +26,14 @@ class Retriever:
         where: dict[str, Any] | None = None,
     ) -> list[dict[str, Any]]:
         """执行语义检索，返回 top_k 个最相似文档。"""
-        return self._store.search(query, top_k=top_k, where=where)
+        from ..observability import traced_operation
+        with traced_operation(
+            "rag.retrieval",
+            input={"query": query, "top_k": top_k},
+        ) as op:
+            hits = self._store.search(query, top_k=top_k, where=where)
+            op.update(output={"hits": len(hits)})
+            return hits
 
     def format_context(self, results: list[dict[str, Any]]) -> str:
         """将检索结果格式化为 LLM 可用的上下文文本。"""

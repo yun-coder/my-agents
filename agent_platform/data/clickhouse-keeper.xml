@@ -1,0 +1,7 @@
+<clickhouse_duckdb></clickhouse_duckdb>
+<clickhouse>
+    <keeper>
+        <use_local_keeper>1</use_local_keeper>
+        <force_replication_without_zookeeper>0</force_replication_without_zookeeper>
+    </keeper>
+</clickhouse>
