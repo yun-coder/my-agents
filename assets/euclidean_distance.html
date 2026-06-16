@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>欧几里得距离 Euclidean Distance</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #0f0f23; color: #e0e0e0; padding: 40px; }
+h1 { text-align: center; font-size: 28px; margin-bottom: 8px; color: #ff8a65; }
+.subtitle { text-align: center; font-size: 15px; color: #90a4ae; margin-bottom: 30px; }
+.container { max-width: 960px; margin: 0 auto; }
+section { background: #1a1a2e; border-radius: 16px; padding: 28px; margin-bottom: 28px; border: 1px solid #2a2a4a; }
+h2 { font-size: 20px; color: #ffab91; margin-bottom: 16px; border-left: 4px solid #ff7043; padding-left: 12px; }
+.formula { background: #16213e; border-radius: 10px; padding: 16px 24px; margin: 16px 0; font-size: 18px; text-align: center; font-family: 'Cambria Math', 'Times New Roman', serif; color: #fbe9e7; letter-spacing: 1px; }
+.step { display: flex; align-items: center; margin: 10px 0; padding: 10px 16px; background: #0f3460; border-radius: 8px; font-size: 15px; }
+.step-num { background: #ff7043; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 14px; flex-shrink: 0; font-size: 14px; }
+table.calc { width: 100%; border-collapse: collapse; margin: 14px 0; }
+table.calc th { background: #bf360c; color: #fff; padding: 10px 14px; text-align: center; font-size: 14px; }
+table.calc td { padding: 9px 14px; text-align: center; border-bottom: 1px solid #1a237e; font-size: 15px; }
+table.calc tr:hover td { background: #3e2723; }
+.result-box { background: linear-gradient(135deg, #4a148c, #6a1b9a); border-radius: 10px; padding: 16px; text-align: center; font-size: 20px; color: #e1bee7; margin-top: 16px; font-weight: bold; }
+.interp { margin-top: 12px; font-size: 14px; color: #b0bec5; line-height: 1.8; }
+.interp b { color: #ffccbc; }
+svg { display: block; margin: 16px auto; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>欧几里得距离 Euclidean Distance</h1>
+<p class="subtitle">空间中两点间的直线距离 —— 最直观的距离度量</p>
+
+<section>
+<h2>📐 核心公式</h2>
+<div class="formula">
+    d(A,B) = √[ (a₁−b₁)² + (a₂−b₂)² + ... + (aₙ−bₙ)² ]
+</div>
+<div class="interp">
+    取值范围 <b>[0, +∞)</b>：<br>
+    &bull; <b>0</b> = 两点完全重合 &nbsp;|&nbsp;
+    值越小 = 距离越近 &nbsp;|&nbsp;
+    值越大 = 距离越远<br>
+    <b>注意</b>：受向量模长影响，维度越高时距离容易膨胀（维数灾难）
+</div>
+</section>
+
+<section>
+<h2>📊 示例：二维平面上的两点</h2>
+<p style="font-size:16px; margin:12px 0;">
+    A = <b>(3, 4)</b> &nbsp;&nbsp;&nbsp;
+    B = <b>(1, 1)</b>
+</p>
+<svg width="520" height="400" viewBox="0 0 520 400">
+    <!-- grid -->
+    <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a237e" stroke-width="0.5"/>
+        </pattern>
+    </defs>
+    <rect x="60" y="20" width="400" height="340" fill="url(#grid)" opacity="0.5"/>
+    <!-- axes -->
+    <line x1="60" y1="360" x2="480" y2="360" stroke="#546e7a" stroke-width="2"/>
+    <line x1="60" y1="360" x2="60" y2="20" stroke="#546e7a" stroke-width="2"/>
+    <text x="490" y="370" fill="#78909c" font-size="13">x</text>
+    <text x="45" y="25" fill="#78909c" font-size="13">y</text>
+    <!-- tick labels -->
+    <text x="140" y="380" fill="#78909c" font-size="11" text-anchor="middle">1</text>
+    <text x="220" y="380" fill="#78909c" font-size="11" text-anchor="middle">2</text>
+    <text x="300" y="380" fill="#78909c" font-size="11" text-anchor="middle">3</text>
+    <text x="140" y="320" fill="#78909c" font-size="11" text-anchor="middle">1</text>
+    <text x="140" y="240" fill="#78909c" font-size="11" text-anchor="middle">2</text>
+    <text x="140" y="160" fill="#78909c" font-size="11" text-anchor="middle">3</text>
+    <text x="140" y="80"  fill="#78909c" font-size="11" text-anchor="middle">4</text>
+    <!-- point B = (1,1) -->
+    <circle cx="140" cy="320" r="7" fill="#ef5350" stroke="#fff" stroke-width="2"/>
+    <text x="120" y="310" fill="#ef5350" font-size="14" font-weight="bold">B(1,1)</text>
+    <!-- point A = (3,4) -->
+    <circle cx="300" cy="80"  r="7" fill="#42a5f5" stroke="#fff" stroke-width="2"/>
+    <text x="310" y="75" fill="#42a5f5" font-size="14" font-weight="bold">A(3,4)</text>
+    <!-- dashed lines forming right triangle -->
+    <line x1="140" y1="320" x2="300" y2="320" stroke="#ffd54f" stroke-width="2" stroke-dasharray="6,4"/>
+    <line x1="300" y1="320" x2="300" y2="80"  stroke="#ffd54f" stroke-width="2" stroke-dasharray="6,4"/>
+    <!-- hypotenuse (distance) -->
+    <line x1="140" y1="320" x2="300" y2="80"  stroke="#ce93d8" stroke-width="3"/>
+    <text x="200" y="185" fill="#ce93d8" font-size="15" font-weight="bold">d = √13 ≈ 3.606</text>
+    <!-- right angle marker -->
+    <polyline points="280,320 280,300 300,300" fill="none" stroke="#ffd54f" stroke-width="1.5"/>
+    <!-- dimension labels -->
+    <text x="210" y="345" fill="#ffd54f" font-size="12" text-anchor="middle">Δx = 2</text>
+    <text x="315" y="205" fill="#ffd54f" font-size="12">Δy = 3</text>
+</svg>
+
+<h2 style="margin-top:20px;">逐步计算过程</h2>
+<table class="calc">
+<tr><th>步骤</th><th>计算</th><th>结果</th></tr>
+<tr><td>1</td><td>Δx = 3 − 1, &nbsp; Δy = 4 − 1</td><td>= 2, 3</td></tr>
+<tr><td>2</td><td>(Δx)² + (Δy)²</td><td>= 2² + 3² = 4 + 9 = 13</td></tr>
+<tr><td>3</td><td>d = √13</td><td>= 3.606</td></tr>
+</table>
+<div class="result-box">d(A,B) = √13 ≈ 3.606</div>
+</section>
+
+<section>
+<h2>🔄 与余弦相似度的关系</h2>
+<table class="calc">
+<tr><th>特性</th><th>欧几里得距离</th><th>余弦相似度</th></tr>
+<tr><td>关注</td><td>绝对距离（模长 + 方向）</td><td>仅方向</td></tr>
+<tr><td>范围</td><td>[0, +∞)</td><td>[-1, 1]</td></tr>
+<tr><td>归一化</td><td>受长度影响</td><td>自动归一化</td></tr>
+<tr><td>典型用途</td><td>K-Means、KNN、聚类</td><td>RAG 语义检索、文本相似度</td></tr>
+</table>
+<div class="interp" style="margin-top:16px;">
+    <b>转换公式</b>：如果向量已归一化（‖A‖ = ‖B‖ = 1），则<br>
+    d²(A,B) = 2 − 2·cos(θ)，即欧氏距离越小 → 余弦相似度越高
+</div>
+</section>
+</div>
+</body>
+</html>

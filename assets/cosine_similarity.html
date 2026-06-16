@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>余弦相似度 Cosine Similarity</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #0f0f23; color: #e0e0e0; padding: 40px; }
+h1 { text-align: center; font-size: 28px; margin-bottom: 8px; color: #64b5f6; }
+.subtitle { text-align: center; font-size: 15px; color: #90a4ae; margin-bottom: 30px; }
+.container { max-width: 960px; margin: 0 auto; }
+section { background: #1a1a2e; border-radius: 16px; padding: 28px; margin-bottom: 28px; border: 1px solid #2a2a4a; }
+h2 { font-size: 20px; color: #90caf9; margin-bottom: 16px; border-left: 4px solid #42a5f5; padding-left: 12px; }
+.formula { background: #16213e; border-radius: 10px; padding: 16px 24px; margin: 16px 0; font-size: 18px; text-align: center; font-family: 'Cambria Math', 'Times New Roman', serif; color: #e3f2fd; letter-spacing: 1px; }
+.step { display: flex; align-items: center; margin: 10px 0; padding: 10px 16px; background: #0f3460; border-radius: 8px; font-size: 15px; }
+.step-num { background: #42a5f5; color: #fff; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 14px; flex-shrink: 0; font-size: 14px; }
+table.calc { width: 100%; border-collapse: collapse; margin: 14px 0; }
+table.calc th { background: #1565c0; color: #fff; padding: 10px 14px; text-align: center; font-size: 14px; }
+table.calc td { padding: 9px 14px; text-align: center; border-bottom: 1px solid #1a237e; font-size: 15px; }
+table.calc tr:hover td { background: #1a3a6a; }
+.result-box { background: linear-gradient(135deg, #1b5e20, #2e7d32); border-radius: 10px; padding: 16px; text-align: center; font-size: 20px; color: #c8e6c9; margin-top: 16px; font-weight: bold; }
+.interp { margin-top: 12px; font-size: 14px; color: #b0bec5; line-height: 1.8; }
+.interp b { color: #90caf9; }
+svg { display: block; margin: 16px auto; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>余弦相似度 Cosine Similarity</h1>
+<p class="subtitle">衡量两个向量方向的一致性，与模长无关</p>
+
+<section>
+<h2>📐 核心公式</h2>
+<div class="formula">
+    cos(θ) = A · B / (‖A‖ × ‖B‖) = Σ(aᵢ×bᵢ) / √(Σaᵢ²) × √(Σbᵢ²)
+</div>
+<div class="interp">
+    取值范围 <b>[-1, 1]</b>：<br>
+    &bull; <b>1</b> = 方向完全相同（夹角 0°） &nbsp;|&nbsp;
+    <b>0</b> = 互相垂直（无关） &nbsp;|&nbsp;
+    <b>-1</b> = 方向完全相反
+</div>
+</section>
+
+<section>
+<h2>📊 示例：两个 3 维向量</h2>
+<p style="font-size:16px; margin:12px 0;">
+    A = <b>[3, 4, 1]</b> &nbsp;&nbsp;&nbsp;
+    B = <b>[2, 0, 1]</b>
+</p>
+<svg width="500" height="340" viewBox="0 0 500 340">
+    <defs>
+        <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#78909c"/>
+        </marker>
+    </defs>
+    <!-- axes -->
+    <line x1="80" y1="300" x2="460" y2="300" stroke="#546e7a" stroke-width="2" marker-end="url(#arrow)"/>
+    <line x1="80" y1="300" x2="80" y2="30" stroke="#546e7a" stroke-width="2" marker-end="url(#arrow)"/>
+    <text x="460" y="320" fill="#78909c" font-size="13">x</text>
+    <text x="65" y="25" fill="#78909c" font-size="13">z</text>
+    <text x="80" y="318" fill="#78909c" font-size="12">O</text>
+    <!-- vectors from origin -->
+    <line x1="80" y1="300" x2="220" y2="170" stroke="#42a5f5" stroke-width="3"/>
+    <text x="225" y="165" fill="#42a5f5" font-size="14" font-weight="bold">A</text>
+    <line x1="80" y1="300" x2="190" y2="240" stroke="#ef5350" stroke-width="3"/>
+    <text x="195" y="235" fill="#ef5350" font-size="14" font-weight="bold">B</text>
+    <!-- angle arc -->
+    <path d="M 130 260 A 50 50 0 0 0 124 256" fill="none" stroke="#ffd54f" stroke-width="2"/>
+    <text x="135" y="250" fill="#ffd54f" font-size="13">θ</text>
+    <!-- value labels -->
+    <rect x="228" y="148" width="72" height="26" rx="6" fill="#1565c0" opacity="0.8"/>
+    <text x="264" y="166" fill="#fff" font-size="12" text-anchor="middle">A=[3,4,1]</text>
+    <rect x="195" y="218" width="72" height="26" rx="6" fill="#c62828" opacity="0.8"/>
+    <text x="231" y="236" fill="#fff" font-size="12" text-anchor="middle">B=[2,0,1]</text>
+</svg>
+
+<h2 style="margin-top:20px;">逐步计算过程</h2>
+<table class="calc">
+<tr><th>步骤</th><th>计算</th><th>结果</th></tr>
+<tr><td>1</td><td>A · B = 3×2 + 4×0 + 1×1</td><td>= 7</td></tr>
+<tr><td>2</td><td>‖A‖ = √(3² + 4² + 1²) = √(9+16+1)</td><td>= √26 ≈ 5.099</td></tr>
+<tr><td>3</td><td>‖B‖ = √(2² + 0² + 1²) = √(4+0+1)</td><td>= √5 ≈ 2.236</td></tr>
+<tr><td>4</td><td>cos(θ) = 7 / (5.099 × 2.236)</td><td>= 7 / 11.402</td></tr>
+</table>
+<div class="result-box">cos(θ) ≈ 0.614 → 夹角 ≈ 52.1° 方向中等偏一致</div>
+</section>
+
+<section>
+<h2>💡 核心意义</h2>
+<div class="step"><div class="step-num">1</div>关注<b>方向</b>而非<b>大小</b>——向量 A=[3,4,1] 和 2A=[6,8,2] 的余弦相似度为 1</div>
+<div class="step"><div class="step-num">2</div>文本嵌入中最常用：将文档/句子转为向量后，余弦相似度 = 语义相似度</div>
+<div class="step"><div class="step-num">3</div>不受向量模长影响：即使用户查询词多词少，方向一致则相似度仍高</div>
+</section>
+</div>
+</body>
+</html>

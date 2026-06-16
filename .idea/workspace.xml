@@ -17,6 +17,18 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "yun-coder"
+  }
+}]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/yun-coder/my-agents.git",
+    "accountId": "81a95b46-b822-4b73-bd23-ad9e848263e0"
+  }
+}]]></component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/dev.json" root0="FORCE_HIGHLIGHTING" />
   </component>
@@ -106,6 +118,7 @@
       <workItem from="1779764587144" duration="306000" />
       <workItem from="1779764903340" duration="4236000" />
       <workItem from="1779774712587" duration="5493000" />
+      <workItem from="1781171742621" duration="110000" />
     </task>
     <servers />
   </component>
