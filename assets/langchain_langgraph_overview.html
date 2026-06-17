@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangChain & LangGraph 构建与流程全景</title>
+<style>
+  :root {
+    --lc-blue: #1a73e8;
+    --lc-light: #e8f0fe;
+    --lg-purple: #7c4dff;
+    --lg-light: #ede7f6;
+    --bg: #0f0f23;
+    --card: #1a1a2e;
+    --border: #2a2a4a;
+    --text: #e0e0e0;
+    --dim: #90a4ae;
+    --green: #66bb6a;
+    --red: #ef5350;
+    --orange: #ffa726;
+    --cyan: #26c6da;
+    --yellow: #ffd54f;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); padding: 24px; }
+  h1 { text-align: center; font-size: 30px; margin-bottom: 4px; background: linear-gradient(135deg, var(--lc-blue), var(--lg-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .subtitle { text-align: center; font-size: 14px; color: var(--dim); margin-bottom: 32px; }
+  .container { max-width: 1400px; margin: 0 auto; }
+  section { background: var(--card); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); }
+  h2 { font-size: 20px; margin-bottom: 16px; padding-left: 12px; border-left: 4px solid var(--purple); }
+  h2.lc-border { border-left-color: var(--lc-blue); }
+  h2.lg-border { border-left-color: var(--lg-purple); }
+
+  /* ─── SVG shared ─── */
+  svg text { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; }
+
+  /* ─── Part 1: 生态全景 ─── */
+  .eco-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .eco-panel { border-radius: 12px; padding: 18px; position: relative; }
+  .eco-panel.lc { background: linear-gradient(135deg, rgba(26,115,232,.12), rgba(26,115,232,.03)); border: 1px solid rgba(26,115,232,.3); }
+  .eco-panel.lg { background: linear-gradient(135deg, rgba(124,77,255,.12), rgba(124,77,255,.03)); border: 1px solid rgba(124,77,255,.3); }
+  .eco-title { font-size: 18px; font-weight: bold; margin-bottom: 12px; }
+  .eco-title.lc { color: var(--lc-blue); }
+  .eco-title.lg { color: var(--lg-purple); }
+  .layer-stack { display: flex; flex-direction: column; gap: 6px; }
+  .layer { border-radius: 8px; padding: 8px 14px; font-size: 13px; display: flex; align-items: center; gap: 8px; }
+  .layer-icon { width: 22px; height: 22px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; color: #fff; flex-shrink: 0; }
+  .layer-top { background: rgba(255,213,79,.15); border: 1px solid rgba(255,213,79,.3); }
+  .layer-mid { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); }
+  .layer-bot { background: rgba(102,187,106,.1); border: 1px solid rgba(102,187,106,.25); }
+  .arrow-down { text-align: center; color: var(--dim); font-size: 18px; margin: 2px 0; }
+
+  /* ─── Part 2: LangChain 构建 ─── */
+  .build-flow { display: flex; align-items: stretch; gap: 0; overflow-x: auto; }
+  .build-step { flex: 1; min-width: 200px; padding: 14px; border-radius: 10px; text-align: center; position: relative; }
+  .build-step.lc-step { background: rgba(26,115,232,.1); border: 1px solid rgba(26,115,232,.3); }
+  .build-arrow { display: flex; align-items: center; justify-content: center; color: var(--dim); font-size: 22px; min-width: 36px; }
+  .build-step .icon { font-size: 28px; margin-bottom: 6px; }
+  .build-step .label { font-size: 14px; font-weight: bold; margin-bottom: 4px; }
+  .build-step .desc { font-size: 11px; color: var(--dim); }
+
+  /* ─── Part 3: LangGraph 图 ─── */
+  .graph-wrapper { display: flex; justify-content: center; }
+
+  /* ─── Part 4: 对比 ─── */
+  .comp-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .comp-table th { background: rgba(124,77,255,.2); color: #ce93d8; padding: 10px 14px; text-align: left; }
+  .comp-table td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
+  .comp-table tr:hover td { background: rgba(255,255,255,.02); }
+  .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+  .tag.lc { background: rgba(26,115,232,.2); color: #64b5f6; }
+  .tag.lg { background: rgba(124,77,255,.2); color: #ce93d8; }
+  .tag.both { background: rgba(102,187,106,.15); color: var(--green); }
+
+  /* ─── Part 5: 集成模式 ─── */
+  .integrate-row { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+  .int-box { border-radius: 12px; padding: 16px 22px; text-align: center; min-width: 180px; }
+  .int-box.lc { background: rgba(26,115,232,.12); border: 1px solid rgba(26,115,232,.35); }
+  .int-box.lg { background: rgba(124,77,255,.12); border: 1px solid rgba(124,77,255,.35); }
+  .int-box.center { background: rgba(255,213,79,.1); border: 1px solid rgba(255,213,79,.3); }
+  .int-box .ib-title { font-weight: bold; font-size: 15px; margin-bottom: 4px; }
+  .int-box .ib-desc { font-size: 11px; color: var(--dim); }
+  .int-arrow { font-size: 24px; color: var(--dim); }
+
+  footer { text-align: center; color: var(--dim); font-size: 12px; margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>LangChain &amp; LangGraph 构建与流程全景</h1>
+<p class="subtitle">从链式编排到有向图 Agent——一张图看懂两大框架的构造与协作</p>
+
+<!-- ════════════════════════ PART 1: 生态全景 ════════════════════════ -->
+<section>
+<h2>一、生态全景：LangChain 与 LangGraph 的关系</h2>
+<div class="eco-grid">
+  <!-- LangChain -->
+  <div class="eco-panel lc">
+    <div class="eco-title lc">🔗 LangChain — 链式 LLM 应用框架</div>
+    <div class="layer-stack">
+      <div class="layer layer-top">
+        <span class="layer-icon" style="background:var(--yellow)">🎯</span>
+        <div><strong>Applications / Agents</strong><br><span style="font-size:11px;color:var(--dim)">ChatEngine, RAG Application, ReAct Agent, Conversational Agent</span></div>
+      </div>
+      <div class="arrow-down">▼</div>
+      <div class="layer layer-mid">
+        <span class="layer-icon" style="background:var(--lc-blue)">⛓</span>
+        <div><strong>Chains（链）</strong><br><span style="font-size:11px;color:var(--dim)">LCEL Runnable 协议 · SequentialChain · RouterChain · StuffDocumentsChain</span></div>
+      </div>
+      <div class="arrow-down">▼</div>
+      <div class="layer layer-mid">
+        <span class="layer-icon" style="background:#5c6bc0">🧩</span>
+        <div><strong>Components（组件）</strong><br><span style="font-size:11px;color:var(--dim)">Prompts · Models · Output Parsers · Callbacks · Memory</span></div>
+      </div>
+      <div class="arrow-down">▼</div>
+      <div class="layer layer-bot">
+        <span class="layer-icon" style="background:var(--green)">📡</span>
+        <div><strong>Integrations（集成）</strong><br><span style="font-size:11px;color:var(--dim)">LLMs · Embeddings · Vector Stores · Tools · Chat History</span></div>
+      </div>
+    </div>
+  </div>
+  <!-- LangGraph -->
+  <div class="eco-panel lg">
+    <div class="eco-title lg">🕸 LangGraph — 有向图 Agent 编排框架</div>
+    <div class="layer-stack">
+      <div class="layer layer-top">
+        <span class="layer-icon" style="background:var(--yellow)">🎯</span>
+        <div><strong>Streaming / Interrupt / Persistence</strong><br><span style="font-size:11px;color:var(--dim)">实时流式输出 · 人工审核中断 · 多线程 Checkpoint</span></div>
+      </div>
+      <div class="arrow-down">▼</div>
+      <div class="layer layer-mid">
+        <span class="layer-icon" style="background:var(--lg-purple)">🕸</span>
+        <div><strong>StateGraph（有向图）</strong><br><span style="font-size:11px;color:var(--dim)">Nodes（节点）· Edges（边）· ConditionalRouter（条件路由）· Compilation</span></div>
+      </div>
+      <div class="arrow-down">▼</div>
+      <div class="layer layer-mid">
+        <span class="layer-icon" style="background:#5c6bc0">💾</span>
+        <div><strong>State &amp; Checkpoint</strong><br><span style="font-size:11px;color:var(--dim)">TypedDict State · MessageHistory · MemorySaver / SqliteSaver / PostgresSaver</span></div>
+      </div>
+      <div class="arrow-down">▼</div>
+      <div class="layer layer-bot">
+        <span class="layer-icon" style="background:var(--green)">📡</span>
+        <div><strong>Integrations（复用 LangChain）</strong><br><span style="font-size:11px;color:var(--dim)">LLMs · Tools · RAG · Embeddings · Vector Stores（全部来自 LangChain）</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ════════════════════════ PART 2: LangChain 构建流程 ════════════════════════ -->
+<section>
+<h2 class="lc-border">二、LangChain 构建流程（LCEL 链式编排）</h2>
+<div class="build-flow">
+  <div class="build-step lc-step">
+    <div class="icon">📝</div>
+    <div class="label" style="color:var(--lc-blue)">① Prompt 模板</div>
+    <div class="desc">ChatPromptTemplate<br>定义消息结构<br>(system / human / messages)</div>
+  </div>
+  <div class="build-arrow">➜</div>
+  <div class="build-step lc-step">
+    <div class="icon">🤖</div>
+    <div class="label" style="color:var(--lc-blue)">② LLM 绑定</div>
+    <div class="desc">llm = ChatOpenAI()<br>prompt | llm<br>LCEL pipe 操作符</div>
+  </div>
+  <div class="build-arrow">➜</div>
+  <div class="build-step lc-step">
+    <div class="icon">📋</div>
+    <div class="label" style="color:var(--lc-blue)">③ Output Parser</div>
+    <div class="desc">StrOutputParser /<br>JsonOutputParser<br>结构化提取响应</div>
+  </div>
+  <div class="build-arrow">➜</div>
+  <div class="build-step lc-step">
+    <div class="icon">📚</div>
+    <div class="label" style="color:var(--lc-blue)">④ RAG 链</div>
+    <div class="desc">Retriever + StuffDocumentsChain<br>检索 → 拼接 → LLM → 输出</div>
+  </div>
+  <div class="build-arrow">➜</div>
+  <div class="build-step lc-step">
+    <div class="icon">🔧</div>
+    <div class="label" style="color:var(--lc-blue)">⑤ Agent 链</div>
+    <div class="desc">create_react_agent()<br>LLM + Tools + Memory<br>自动工具选择循环</div>
+  </div>
+  <div class="build-arrow">➜</div>
+  <div class="build-step lc-step">
+    <div class="icon">⚡</div>
+    <div class="label" style="color:var(--lc-blue)">⑥ Runnable 执行</div>
+    <div class="desc">.invoke() / .stream()<br>.batch() / .astream_events()<br>统一接口调用</div>
+  </div>
+</div>
+</section>
+
+<!-- ════════════════════════ PART 3: LangGraph 完整流程图 ════════════════════════ -->
+<section>
+<h2 class="lg-border">三、LangGraph 完整流程：从构建到执行</h2>
+<div class="graph-wrapper">
+<svg width="1340" height="620" viewBox="0 0 1340 620">
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#546e7a"/>
+    </marker>
+    <marker id="ah-blue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#1a73e8"/>
+    </marker>
+    <marker id="ah-purple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#7c4dff"/>
+    </marker>
+    <linearGradient id="lcGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1a73e8" stop-opacity=".15"/>
+      <stop offset="100%" stop-color="#1a73e8" stop-opacity=".03"/>
+    </linearGradient>
+    <linearGradient id="lgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c4dff" stop-opacity=".15"/>
+      <stop offset="100%" stop-color="#7c4dff" stop-opacity=".03"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ===== 第1行：构建阶段 ===== -->
+  <text x="670" y="26" fill="#ce93d8" font-size="15" text-anchor="middle" font-weight="bold">━━━ 阶段 A：构建（Build Time）━━━</text>
+
+  <!-- Step 1: 定义 State -->
+  <rect x="30" y="42" width="240" height="60" rx="10" fill="rgba(26,115,232,.1)" stroke="#1a73e8" stroke-width="1.5"/>
+  <text x="150" y="64" fill="#64b5f6" font-size="12" text-anchor="middle" font-weight="bold">1. 定义 TypedDict State</text>
+  <text x="150" y="80" fill="#90a4ae" font-size="10" text-anchor="middle">messages, query, iteration, answer</text>
+  <text x="150" y="94" fill="#90a4ae" font-size="10" text-anchor="middle">← 所有节点共享同一状态</text>
+
+  <!-- Arrow -->
+  <line x1="270" y1="72" x2="300" y2="72" stroke="#546e7a" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <!-- Step 2: 创建 StateGraph -->
+  <rect x="300" y="42" width="240" height="60" rx="10" fill="rgba(124,77,255,.1)" stroke="#7c4dff" stroke-width="1.5"/>
+  <text x="420" y="64" fill="#ce93d8" font-size="12" text-anchor="middle" font-weight="bold">2. StateGraph(State)</text>
+  <text x="420" y="80" fill="#90a4ae" font-size="10" text-anchor="middle">builder = StateGraph(AgentState)</text>
+  <text x="420" y="94" fill="#90a4ae" font-size="10" text-anchor="middle">← 图构建器实例</text>
+
+  <!-- Arrow -->
+  <line x1="540" y1="72" x2="570" y2="72" stroke="#546e7a" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <!-- Step 3: 添加节点 -->
+  <rect x="570" y="42" width="240" height="60" rx="10" fill="rgba(124,77,255,.1)" stroke="#7c4dff" stroke-width="1.5"/>
+  <text x="690" y="64" fill="#ce93d8" font-size="12" text-anchor="middle" font-weight="bold">3. add_node() × N</text>
+  <text x="690" y="80" fill="#90a4ae" font-size="10" text-anchor="middle">agent_fn, tool_fn, rag_fn</text>
+  <text x="690" y="94" fill="#90a4ae" font-size="10" text-anchor="middle">← 注册处理函数到图</text>
+
+  <!-- Arrow -->
+  <line x1="810" y1="72" x2="840" y2="72" stroke="#546e7a" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <!-- Step 4: 添加边 -->
+  <rect x="840" y="42" width="240" height="60" rx="10" fill="rgba(124,77,255,.1)" stroke="#7c4dff" stroke-width="1.5"/>
+  <text x="960" y="64" fill="#ce93d8" font-size="12" text-anchor="middle" font-weight="bold">4. add_edge() / cond_edges</text>
+  <text x="960" y="80" fill="#90a4ae" font-size="10" text-anchor="middle">固定边 + 条件路由</text>
+  <text x="960" y="94" fill="#90a4ae" font-size="10" text-anchor="middle">← 定义节点连接关系</text>
+
+  <!-- Arrow -->
+  <line x1="1080" y1="72" x2="1110" y2="72" stroke="#546e7a" stroke-width="1.5" marker-end="url(#ah)"/>
+
+  <!-- Step 5: Compile -->
+  <rect x="1110" y="42" width="200" height="60" rx="10" fill="rgba(255,213,79,.12)" stroke="#ffd54f" stroke-width="1.5"/>
+  <text x="1210" y="64" fill="#ffd54f" font-size="12" text-anchor="middle" font-weight="bold">5. compile()</text>
+  <text x="1210" y="80" fill="#90a4ae" font-size="10" text-anchor="middle">→ 可执行 Graph 对象</text>
+  <text x="1210" y="94" fill="#90a4ae" font-size="10" text-anchor="middle">← 验证 + 序列化</text>
+
+  <!-- ===== 第2行：运行时图执行 ===== -->
+  <text x="670" y="132" fill="#b388ff" font-size="15" text-anchor="middle" font-weight="bold">━━━ 阶段 B：运行时图执行（Runtime）━━━</text>
+
+  <!-- START -->
+  <rect x="590" y="148" width="160" height="38" rx="19" fill="#ff7043" opacity=".9"/>
+  <text x="670" y="171" fill="#fff" font-size="13" text-anchor="middle" font-weight="bold">START</text>
+
+  <line x1="670" y1="186" x2="670" y2="210" stroke="#546e7a" stroke-width="2" marker-end="url(#ah)"/>
+
+  <!-- Agent Node -->
+  <rect x="540" y="210" width="260" height="64" rx="12" fill="rgba(21,101,192,.25)" stroke="#1a73e8" stroke-width="2"/>
+  <text x="670" y="235" fill="#64b5f6" font-size="14" text-anchor="middle" font-weight="bold">🧠 Agent Node</text>
+  <text x="670" y="253" fill="#90a4ae" font-size="11" text-anchor="middle">LLM 调用 · 决策: 工具 / RAG / 直接回答</text>
+  <text x="670" y="268" fill="#78909c" font-size="10" text-anchor="middle">输入 State → 返回 {messages, iteration}</text>
+
+  <!-- Conditional router diamond -->
+  <polygon points="670,290 710,310 670,330 630,310" fill="rgba(255,213,79,.15)" stroke="#ffd54f" stroke-width="1.5"/>
+  <text x="670" y="314" fill="#ffd54f" font-size="10" text-anchor="middle">Router</text>
+
+  <!-- Three branches -->
+  <!-- Branch 1: Tools -->
+  <line x1="630" y1="328" x2="300" y2="380" stroke="#ef5350" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="440" y="350" fill="#ef5350" font-size="10">tools</text>
+
+  <!-- Branch 2: RAG -->
+  <line x1="670" y1="330" x2="670" y2="380" stroke="#66bb6a" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="680" y="355" fill="#66bb6a" font-size="10">rag</text>
+
+  <!-- Branch 3: End -->
+  <line x1="710" y1="328" x2="1040" y2="380" stroke="#78909c" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#ah)"/>
+  <text x="900" y="350" fill="#78909c" font-size="10">end → END</text>
+
+  <!-- Tool Node -->
+  <rect x="170" y="380" width="260" height="64" rx="12" fill="rgba(198,40,40,.2)" stroke="#ef5350" stroke-width="2"/>
+  <text x="300" y="405" fill="#ef9a9a" font-size="14" text-anchor="middle" font-weight="bold">🔧 Tool Node</text>
+  <text x="300" y="423" fill="#90a4ae" font-size="11" text-anchor="middle">执行工具调用 · 获取结果</text>
+  <text x="300" y="438" fill="#78909c" font-size="10" text-anchor="middle">返回 {messages, tool_log}</text>
+
+  <!-- RAG Node -->
+  <rect x="540" y="380" width="260" height="64" rx="12" fill="rgba(46,125,50,.2)" stroke="#66bb6a" stroke-width="2"/>
+  <text x="670" y="405" fill="#a5d6a7" font-size="14" text-anchor="middle" font-weight="bold">📚 RAG Node</text>
+  <text x="670" y="423" fill="#90a4ae" font-size="11" text-anchor="middle">向量检索 · 文档拼接 · 上下文注入</text>
+  <text x="670" y="438" fill="#78909c" font-size="10" text-anchor="middle">返回 {messages}</text>
+
+  <!-- END Node -->
+  <rect x="910" y="380" width="260" height="64" rx="12" fill="rgba(55,71,79,.3)" stroke="#78909c" stroke-width="2"/>
+  <text x="1040" y="405" fill="#b0bec5" font-size="14" text-anchor="middle" font-weight="bold">⏹ END</text>
+  <text x="1040" y="423" fill="#90a4ae" font-size="11" text-anchor="middle">返回最终答案</text>
+  <text x="1040" y="438" fill="#78909c" font-size="10" text-anchor="middle">输出 State</text>
+
+  <!-- Feedback loops -->
+  <path d="M 170 412 Q 110 412 110 340 Q 110 270 540 274" fill="none" stroke="#ef5350" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <polygon points="536,272 544,272 540,280" fill="#ef5350"/>
+  <text x="105" y="345" fill="#ef5350" font-size="10" text-anchor="middle" transform="rotate(-90,105,345)">循环: tools → agent</text>
+
+  <path d="M 540 412 Q 470 412 470 340 Q 470 270 540 274" fill="none" stroke="#66bb6a" stroke-width="1.5" stroke-dasharray="6,4"/>
+  <polygon points="536,272 544,272 540,280" fill="#66bb6a"/>
+  <text x="465" y="345" fill="#66bb6a" font-size="10" text-anchor="middle" transform="rotate(-90,465,345)">循环: rag → agent</text>
+
+  <!-- Checkpoint layer -->
+  <rect x="60" y="470" width="1220" height="70" rx="12" fill="rgba(26,35,126,.2)" stroke="#3949ab" stroke-width="2"/>
+  <text x="670" y="495" fill="#c5cae9" font-size="14" text-anchor="middle" font-weight="bold">💾 Checkpoint 持久化层（每步 State 快照）</text>
+  <text x="670" y="514" fill="#9fa8da" font-size="11" text-anchor="middle">MemorySaver（内存） · SqliteSaver（本地） · PostgresSaver（生产）</text>
+  <text x="670" y="532" fill="#7986cb" font-size="10" text-anchor="middle">支持：中断/恢复 · 多线程隔离 · 时间旅行 · 人工审核</text>
+  <text x="670" y="548" fill="#5c6bc0" font-size="10" text-anchor="middle">interrupt() → 暂停等待 Command(resume) → 继续执行</text>
+
+  <!-- Lines to checkpoint -->
+  <line x1="300" y1="444" x2="300" y2="470" stroke="#3949ab" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="670" y1="444" x2="670" y2="470" stroke="#3949ab" stroke-width="1" stroke-dasharray="3,3"/>
+  <line x1="1040" y1="444" x2="1040" y2="470" stroke="#3949ab" stroke-width="1" stroke-dasharray="3,3"/>
+
+  <!-- ===== 第3行：执行方式 ===== -->
+  <text x="670" y="575" fill="#80cbc4" font-size="14" text-anchor="middle" font-weight="bold">━━━ 阶段 C：执行接口 ━━━</text>
+
+  <rect x="60" y="590" width="200" height="28" rx="6" fill="rgba(38,198,218,.1)" stroke="#26c6da" stroke-width="1"/>
+  <text x="160" y="609" fill="#26c6da" font-size="12" text-anchor="middle">graph.invoke(input)</text>
+
+  <rect x="290" y="590" width="200" height="28" rx="6" fill="rgba(38,198,218,.1)" stroke="#26c6da" stroke-width="1"/>
+  <text x="390" y="609" fill="#26c6da" font-size="12" text-anchor="middle">graph.stream(input)</text>
+
+  <rect x="520" y="590" width="200" height="28" rx="6" fill="rgba(38,198,218,.1)" stroke="#26c6da" stroke-width="1"/>
+  <text x="620" y="609" fill="#26c6da" font-size="12" text-anchor="middle">graph.batch(inputs)</text>
+
+  <rect x="750" y="590" width="200" height="28" rx="6" fill="rgba(38,198,218,.1)" stroke="#26c6da" stroke-width="1"/>
+  <text x="850" y="609" fill="#26c6da" font-size="12" text-anchor="middle">graph.astream_events()</text>
+
+  <rect x="980" y="590" width="300" height="28" rx="6" fill="rgba(38,198,218,.1)" stroke="#26c6da" stroke-width="1"/>
+  <text x="1130" y="609" fill="#26c6da" font-size="12" text-anchor="middle">with checkpoint → interrupt → Command(resume)</text>
+
+</svg>
+</div>
+</section>
+
+<!-- ════════════════════════ PART 4: 对比 ════════════════════════ -->
+<section>
+<h2>四、LangChain Chain vs LangGraph 对比</h2>
+<table class="comp-table">
+<tr>
+  <th style="width:140px">维度</th>
+  <th><span class="tag lc">LangChain Chains</span></th>
+  <th><span class="tag lg">LangGraph StateGraph</span></th>
+</tr>
+<tr>
+  <td style="color:var(--dim)">数据流模型</td>
+  <td>线性管道（Runnable 链式调用）</td>
+  <td>有向图（节点 + 边 + 循环）</td>
+</tr>
+<tr>
+  <td style="color:var(--dim)">控制流</td>
+  <td>顺序执行 / 并行合并</td>
+  <td>条件路由 / 循环 / 分支 / 中断</td>
+</tr>
+<tr>
+  <td style="color:var(--dim)">状态管理</td>
+  <td>每次传递完整 dict</td>
+  <td>共享 TypedDict，增量更新</td>
+</tr>
+<tr>
+  <td style="color:var(--dim)">循环能力</td>
+  <td>ReAct Agent 内置简单循环</td>
+  <td>原生支持任意循环（图边回指）</td>
+</tr>
+<tr>
+  <td style="color:var(--dim)">检查点</td>
+  <td>无（或外部实现）</td>
+  <td>内建 Checkpointer，每步快照</td>
+</tr>
+<tr>
+  <td style="color:var(--dim)">中断/恢复</td>
+  <td>不支持</td>
+  <td>interrupt() + Command(resume)</td>
+</tr>
+<tr>
+  <td style="color:var(--dim)">可视化</td>
+  <td>无</td>
+  <td>graph.get_graph().draw_mermaid_png()</td>
+</tr>
+<tr>
+  <td style="color:var(--dim)">适用场景</td>
+  <td>RAG 流水线、简单 Agent、Prompt→LLM→Parse</td>
+  <td>多步 Agent、人工审核、复杂工作流</td>
+</tr>
+<tr>
+  <td style="color:var(--dim)">底层依赖</td>
+  <td>—</td>
+  <td>依赖 LangChain 组件（LLM/Tool/RAG）</td>
+</tr>
+</table>
+</section>
+
+<!-- ════════════════════════ PART 5: 集成模式 ════════════════════════ -->
+<section>
+<h2>五、LangChain + LangGraph 集成模式</h2>
+<div class="integrate-row">
+  <div class="int-box lc">
+    <div class="ib-title" style="color:var(--lc-blue)">🔗 LangChain</div>
+    <div class="ib-desc">提供组件：<br>LLM · Prompt · Tool · RAG · Memory</div>
+  </div>
+  <div class="int-arrow">⟶</div>
+  <div class="int-box center">
+    <div class="ib-title" style="color:var(--yellow)">⚙️ LangGraph 编排</div>
+    <div class="ib-desc">将 LangChain 组件<br>组装为有向图工作流<br>条件路由 + 循环 + 检查点</div>
+  </div>
+  <div class="int-arrow">⟶</div>
+  <div class="int-box lg">
+    <div class="ib-title" style="color:var(--lg-purple)">🕸 生产级 Agent</div>
+    <div class="ib-desc">流式输出 · 人工审核<br>多轮对话 · 时间旅行<br>生产持久化</div>
+  </div>
+</div>
+
+<div style="margin-top:20px; padding:16px; background:rgba(124,77,255,.06); border-radius:10px; border:1px solid rgba(124,77,255,.2);">
+  <p style="font-size:13px; color:#ce93d8; margin-bottom:8px;"><strong>典型代码结构：</strong></p>
+  <pre style="font-size:11px; color:#80cbc4; font-family:'Consolas',monospace; line-height:1.7; overflow-x:auto; white-space:pre-wrap;">
+# 1. LangChain 组件
+llm = ChatOpenAI(model="gpt-4")
+tools = [search_tool, calculator_tool]
+retriever = vectorstore.as_retriever()
+
+# 2. LangGraph 图构建
+builder = StateGraph(AgentState)
+builder.add_node("agent", agent_node)       # 使用 LangChain LLM
+builder.add_node("tools", tool_node)         # 使用 LangChain Tools
+builder.add_node("rag", rag_node)            # 使用 LangChain RAG
+builder.set_entry_point("agent")
+builder.add_conditional_edges("agent", router, {"tools": "tools", "rag": "rag", "end": END})
+builder.add_edge("tools", "agent")
+builder.add_edge("rag", "agent")
+
+# 3. 编译 & 运行
+graph = builder.compile(checkpointer=MemorySaver())
+result = graph.invoke({"messages": [...]}, config={"configurable": {"thread_id": "123"}})
+  </pre>
+</div>
+</section>
+
+<footer>LangChain &amp; LangGraph 全景图 — 构建时定义图结构 → 运行时按图执行 → 组件全部来自 LangChain 生态</footer>
+
+</div>
+</body>
+</html>
