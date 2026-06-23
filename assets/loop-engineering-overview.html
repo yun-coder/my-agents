@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Loop Engineering 橙皮书 - 全景图示</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-dim: #8b949e;
+      --accent-orange: #f0883e;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-purple: #bc8cff;
+      --accent-red: #f85149;
+      --accent-yellow: #d29922;
+      --accent-cyan: #39d2c0;
+      --accent-pink: #f778ba;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, 'Segoe UI', 'Noto Sans', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 2rem;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: linear-gradient(135deg, #1a1000 0%, #0d1117 50%, #100a00 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin-bottom: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 30% 40%, rgba(240, 136, 62, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 70% 60%, rgba(240, 136, 62, 0.05) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .header h1 {
+      font-size: 2.8rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--accent-orange), #ff6b35, var(--accent-yellow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+
+    .header .subtitle {
+      font-size: 1.3rem;
+      color: var(--text-dim);
+      font-weight: 400;
+      position: relative;
+    }
+
+    .header .meta {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-top: 1rem;
+      opacity: 0.6;
+      position: relative;
+    }
+
+    /* Section titles */
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin: 3rem 0 1.5rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .section-title .icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .section-title h2 {
+      font-size: 1.6rem;
+      font-weight: 700;
+    }
+
+    .section-title .tag {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 20px;
+      background: rgba(240, 136, 62, 0.15);
+      color: var(--accent-orange);
+      border: 1px solid rgba(240, 136, 62, 0.3);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: border-color 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--accent-orange);
+    }
+
+    .card h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    .card .quote {
+      font-style: italic;
+      color: var(--accent-orange);
+      border-left: 3px solid var(--accent-orange);
+      padding-left: 1rem;
+      margin: 0.75rem 0;
+      font-size: 0.85rem;
+    }
+
+    /* Grid layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1rem;
+    }
+
+    /* Stack diagram */
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 1.5rem 0;
+    }
+
+    .stack-layer {
+      display: flex;
+      align-items: stretch;
+      border: 1px solid var(--border);
+      transition: all 0.2s;
+    }
+
+    .stack-layer:first-child {
+      border-radius: 12px 12px 0 0;
+    }
+
+    .stack-layer:last-child {
+      border-radius: 0 0 12px 12px;
+    }
+
+    .stack-layer:hover {
+      z-index: 1;
+      transform: scale(1.02);
+    }
+
+    .stack-layer .layer-bar {
+      width: 6px;
+      flex-shrink: 0;
+    }
+
+    .stack-layer .layer-body {
+      flex: 1;
+      padding: 1rem 1.25rem;
+    }
+
+    .stack-layer .layer-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.25rem;
+    }
+
+    .stack-layer .layer-name {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+
+    .stack-layer .layer-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+    }
+
+    /* Color coding */
+    .c-orange .layer-bar {
+      background: var(--accent-orange);
+    }
+
+    .c-orange .layer-num {
+      color: var(--accent-orange);
+    }
+
+    .c-blue .layer-bar {
+      background: var(--accent-blue);
+    }
+
+    .c-blue .layer-num {
+      color: var(--accent-blue);
+    }
+
+    .c-green .layer-bar {
+      background: var(--accent-green);
+    }
+
+    .c-green .layer-num {
+      color: var(--accent-green);
+    }
+
+    .c-purple .layer-bar {
+      background: var(--accent-purple);
+    }
+
+    .c-purple .layer-num {
+      color: var(--accent-purple);
+    }
+
+    /* Five moves */
+    .moves-row {
+      display: flex;
+      gap: 0;
+      margin: 1.5rem 0;
+      overflow-x: auto;
+    }
+
+    .move-step {
+      flex: 1;
+      min-width: 180px;
+      text-align: center;
+      padding: 1.25rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      position: relative;
+    }
+
+    .move-step:first-child {
+      border-radius: 12px 0 0 12px;
+    }
+
+    .move-step:last-child {
+      border-radius: 0 12px 12px 0;
+    }
+
+    .move-step .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .move-step .step-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .move-step .step-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .move-step .step-sub {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .move-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--accent-orange);
+      font-size: 1.2rem;
+      min-width: 30px;
+    }
+
+    /* Parts grid */
+    .parts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+
+    .part-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .part-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .part-card .part-num {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .part-card h4 {
+      font-size: 1rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .part-card p {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .part-card .part-quote {
+      font-size: 0.78rem;
+      color: var(--accent-orange);
+      margin-top: 0.75rem;
+      font-style: italic;
+      border-left: 2px solid var(--accent-orange);
+      padding-left: 0.75rem;
+    }
+
+    /* Costs table */
+    .costs-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.88rem;
+    }
+
+    .costs-table th {
+      background: rgba(240, 136, 62, 0.1);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--accent-orange);
+    }
+
+    .costs-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .costs-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .costs-table .cost-name {
+      font-weight: 600;
+    }
+
+    /* Case study cards */
+    .case-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .case-card h4 {
+      font-size: 1.05rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .case-card .case-stat {
+      display: inline-block;
+      background: rgba(240, 136, 62, 0.12);
+      color: var(--accent-orange);
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    .case-card p {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      line-height: 1.7;
+    }
+
+    /* Comparison table */
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+      font-size: 0.85rem;
+    }
+
+    .comp-table th {
+      background: rgba(88, 166, 255, 0.1);
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      border-bottom: 2px solid var(--accent-blue);
+      white-space: nowrap;
+    }
+
+    .comp-table td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .comp-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    /* Checklist */
+    .checklist {
+      list-style: none;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.75rem;
+      margin: 1.5rem 0;
+    }
+
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+    }
+
+    .checklist li .check-icon {
+      color: var(--accent-green);
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+
+    .checklist li .check-label {
+      font-weight: 600;
+    }
+
+    .checklist li .check-desc {
+      color: var(--text-dim);
+      font-size: 0.8rem;
+    }
+
+    /* Flow diagram */
+    .flow-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      margin: 2rem 0;
+    }
+
+    .flow-node {
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 2rem;
+      text-align: center;
+      min-width: 220px;
+      position: relative;
+    }
+
+    .flow-node.primary {
+      border-color: var(--accent-orange);
+    }
+
+    .flow-node.secondary {
+      border-color: var(--accent-blue);
+    }
+
+    .flow-node.warning {
+      border-color: var(--accent-red);
+    }
+
+    .flow-node.success {
+      border-color: var(--accent-green);
+    }
+
+    .flow-node .fn-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .flow-node .fn-desc {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+    }
+
+    .flow-connector {
+      width: 2px;
+      height: 30px;
+      background: var(--border);
+      position: relative;
+    }
+
+    .flow-connector::after {
+      content: '▼';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--text-dim);
+      font-size: 0.7rem;
+    }
+
+    .flow-side {
+      display: flex;
+      gap: 1rem;
+      margin: 0.5rem 0;
+      width: 100%;
+      justify-content: center;
+    }
+
+    .flow-side .flow-node {
+      flex: 1;
+      max-width: 250px;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 2rem;
+      margin-top: 3rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-dim);
+      font-size: 0.82rem;
+    }
+
+    .footer .author {
+      color: var(--accent-orange);
+      font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .moves-row {
+        flex-direction: column;
+      }
+
+      .move-step {
+        border-radius: 0 !important;
+      }
+
+      .move-step:first-child {
+        border-radius: 12px 12px 0 0 !important;
+      }
+
+      .move-step:last-child {
+        border-radius: 0 0 12px 12px !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- ==================== HEADER ==================== -->
+    <div class="header">
+      <h1>Loop Engineering</h1>
+      <div class="subtitle">别再问我什么是循环工程</div>
+      <div style="font-size:1rem;color:var(--text-dim);margin-top:0.5rem;">
+        从一句句喂 prompt，到设计让 agent 自己干活的系统
+      </div>
+      <div class="meta">花叔 · 2026年6月版 · 橙皮书 v260615</div>
+    </div>
+
+    <!-- ==================== PART 1: WHAT IS IT ==================== -->
+    <div class="section-title">
+      <div class="icon" style="background:rgba(240,136,62,0.15);color:var(--accent-orange);">①</div>
+      <h2>第一部分：它是什么</h2>
+      <span class="tag">定义 · 演化</span>
+    </div>
+
+    <!-- Definition Card -->
+    <div class="card" style="margin-bottom:2rem;">
+      <h3 style="color:var(--accent-orange);">💡 一句话定义</h3>
+      <div class="quote">
+        "Loop engineering is replacing yourself as the person who prompts the agent. You design the system that does it
+        instead."
+        <br><strong>—— Addy Osmani, Google Chrome</strong>
+      </div>
+      <p style="margin-top:0.75rem;">
+        循环工程的核心是<span style="color:var(--accent-orange);font-weight:600;">替换你自己</span>。不是把提示词写得更好，
+        而是把你这个人从那个位置上挪走。以前你是发动机，现在你是设计发动机的人。
+      </p>
+    </div>
+
+    <!-- Three Voices -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;margin-bottom:2rem;">
+      <div class="card" style="border-top:3px solid var(--accent-blue);">
+        <h3 style="font-size:0.9rem;color:var(--accent-blue);">Peter Steinberger</h3>
+        <p style="font-size:0.82rem;font-style:italic;">"You shouldn't be prompting coding agents anymore. You should be
+          designing loops that prompt your agents."</p>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.5rem;">OpenClaw 作者 · 引爆者</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-green);">
+        <h3 style="font-size:0.9rem;color:var(--accent-green);">Boris Cherny</h3>
+        <p style="font-size:0.82rem;font-style:italic;">"I don't prompt Claude anymore. I have loops running that prompt
+          Claude and figuring out what to do. My job is to write loops."</p>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.5rem;">Anthropic · Claude Code 负责人</p>
+      </div>
+      <div class="card" style="border-top:3px solid var(--accent-purple);">
+        <h3 style="font-size:0.9rem;color:var(--accent-purple);">Addy Osmani</h3>
+        <p style="font-size:0.82rem;font-style:italic;">"Loop engineering sits one floor above the harness."</p>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.5rem;">Google Chrome · 命名者</p>
+      </div>
+    </div>
+
+    <!-- Four-Layer Stack -->
+    <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">🏗️ 四层栈 —— 从 Prompt 到 Loop 的三级跳</h3>
+    <div class="stack">
+      <div class="stack-layer c-orange">
+        <div class="layer-bar"></div>
+        <div class="layer-body">
+          <div class="layer-num">第 4 层 · 最高</div>
+          <div class="layer-name">Loop Engineering（循环工程）</div>
+          <div class="layer-desc">在 harness 之上调度 —— 怎么让它自己一遍遍跑起来<br>
+            <span style="font-size:0.8rem;color:var(--accent-blue);">定时器跑 · 孵化小帮手 · 自我喂食 · 跨越轮次的记忆</span>
+          </div>
+        </div>
+      </div>
+      <div class="stack-layer c-blue">
+        <div class="layer-bar"></div>
+        <div class="layer-body">
+          <div class="layer-num">第 3 层</div>
+          <div class="layer-name">Harness Engineering（工具链工程）</div>
+          <div class="layer-desc">单次运行的武装 —— 给哪些工具、允许哪些动作、什么算完成<br>
+            <span style="font-size:0.8rem;color:var(--text-dim);">武装 agent 的单次运行，但不负责让它自动重来</span>
+          </div>
+        </div>
+      </div>
+      <div class="stack-layer c-green">
+        <div class="layer-bar"></div>
+        <div class="layer-body">
+          <div class="layer-num">第 2 层</div>
+          <div class="layer-name">Context Engineering（上下文工程）</div>
+          <div class="layer-desc">这一刻窗口里放什么 —— 检索什么、摘要什么、清掉什么<br>
+            <span style="font-size:0.8rem;color:var(--text-dim);">塞错东西比塞少更糟，一窗户的噪音让再好的提示词白搭</span>
+          </div>
+        </div>
+      </div>
+      <div class="stack-layer c-purple">
+        <div class="layer-bar"></div>
+        <div class="layer-body">
+          <div class="layer-num">第 1 层 · 基础</div>
+          <div class="layer-name">Prompt Engineering（提示词工程）</div>
+          <div class="layer-desc">写好一次的提示词 —— 我该告诉模型什么<br>
+            <span style="font-size:0.8rem;color:var(--text-dim);">斟酌措辞、给例子、定角色、调语气。递进去，模型吐出来，结束。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== PART 2: HOW IT TURNS ==================== -->
+    <div class="section-title">
+      <div class="icon" style="background:rgba(88,166,255,0.15);color:var(--accent-blue);">②</div>
+      <h2>第二部分：它怎么转</h2>
+      <span class="tag">五动作 · 六零件 · 生成器/评判器</span>
+    </div>
+
+    <!-- Five Moves -->
+    <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">🔄 一个循环的五个动作</h3>
+    <p style="color:var(--text-dim);font-size:0.88rem;margin-bottom:1rem;">
+      以 Addy 的 <strong style="color:var(--text);">triage loop</strong> 为例 —— 每天早上自动跑，不用他点
+    </p>
+    <div class="moves-row">
+      <div class="move-step" style="border-right:none;">
+        <div class="step-num" style="background:rgba(240,136,62,0.15);color:var(--accent-orange);">1</div>
+        <div class="step-icon">🔍</div>
+        <div class="step-name">发现</div>
+        <div class="step-sub">Discovery</div>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.5rem;">
+          triage skill 读 CI 失败、open issues、最近 commits
+        </p>
+      </div>
+      <div class="move-arrow">→</div>
+      <div class="move-step">
+        <div class="step-num" style="background:rgba(88,166,255,0.15);color:var(--accent-blue);">2</div>
+        <div class="step-icon">📦</div>
+        <div class="step-name">交付</div>
+        <div class="step-sub">Handoff</div>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.5rem;">
+          每个发现开一个隔离 worktree
+        </p>
+      </div>
+      <div class="move-arrow">→</div>
+      <div class="move-step">
+        <div class="step-num" style="background:rgba(63,185,80,0.15);color:var(--accent-green);">3</div>
+        <div class="step-icon">✅</div>
+        <div class="step-name">验证</div>
+        <div class="step-sub">Verification</div>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.5rem;">
+          第二个子 agent 对照 skill 和测试审查
+        </p>
+      </div>
+      <div class="move-arrow">→</div>
+      <div class="move-step">
+        <div class="step-num" style="background:rgba(188,140,255,0.15);color:var(--accent-purple);">4</div>
+        <div class="step-icon">💾</div>
+        <div class="step-name">持久化</div>
+        <div class="step-sub">Persistence</div>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.5rem;">
+          开 PR + 更新 ticket + 状态文件
+        </p>
+      </div>
+      <div class="move-arrow">→</div>
+      <div class="move-step">
+        <div class="step-num" style="background:rgba(210,153,34,0.15);color:var(--accent-yellow);">5</div>
+        <div class="step-icon">⚙️</div>
+        <div class="step-name">调度</div>
+        <div class="step-sub">Scheduling</div>
+        <p style="font-size:0.75rem;color:var(--text-dim);margin-top:0.5rem;">
+          早上 automation 自动跑，状态文件留到明天
+        </p>
+      </div>
+    </div>
+
+    <!-- Six Parts -->
+    <h3 style="margin:2rem 0 1rem;font-size:1.1rem;">🧩 六个零件：搭一个 Loop 需要什么</h3>
+    <div class="parts-grid">
+      <div class="part-card" style="--pc:#f0883e;">
+        <div style="position:absolute;top:0;left:0;width:100%;height:3px;background:var(--accent-orange);"></div>
+        <div class="part-num" style="color:var(--accent-orange);">零件 01</div>
+        <h4>⏱️ Automations（自动化/调度）</h4>
+        <p>挂在时间表或触发器上自动跑。没有它，只是一次运行，不是 loop。</p>
+        <div class="part-quote">"Automations are what make a loop an actual loop."</div>
+      </div>
+      <div class="part-card">
+        <div style="position:absolute;top:0;left:0;width:100%;height:3px;background:var(--accent-blue);"></div>
+        <div class="part-num" style="color:var(--accent-blue);">零件 02</div>
+        <h4>🌿 Worktrees（隔离）</h4>
+        <p>git worktree 让每个 agent 在自己的工作目录里改代码，互不干扰。</p>
+        <div class="part-quote">"Two agents writing the same file = two engineers committing same lines."</div>
+      </div>
+      <div class="part-card">
+        <div style="position:absolute;top:0;left:0;width:100%;height:3px;background:var(--accent-green);"></div>
+        <div class="part-num" style="color:var(--accent-green);">零件 03</div>
+        <h4>📋 Skills（SKILL.md）</h4>
+        <p>固化项目知识，让 agent 每次直接取用，不必每圈重新推导上下文。</p>
+        <div class="part-quote">"Fire $skill-name, not a wall of instructions."</div>
+      </div>
+      <div class="part-card">
+        <div style="position:absolute;top:0;left:0;width:100%;height:3px;background:var(--accent-purple);"></div>
+        <div class="part-num" style="color:var(--accent-purple);">零件 04</div>
+        <h4>🔌 Plugins & Connectors（MCP）</h4>
+        <p>MCP 接外部系统：issue tracker、数据库、staging API、Slack。</p>
+        <div class="part-quote">"A loop that can only see the filesystem is a tiny loop."</div>
+      </div>
+      <div class="part-card">
+        <div style="position:absolute;top:0;left:0;width:100%;height:3px;background:var(--accent-red);"></div>
+        <div class="part-num" style="color:var(--accent-red);">零件 05</div>
+        <h4>🤖 Sub-agents（生成/评判分离）</h4>
+        <p>写代码的和评判的必须是两个 agent。同一个 agent 给自己的作业打分太客气。</p>
+        <div class="part-quote">"The model that wrote the code is way too nice grading its own homework."</div>
+      </div>
+      <div class="part-card">
+        <div style="position:absolute;top:0;left:0;width:100%;height:3px;background:var(--accent-yellow);"></div>
+        <div class="part-num" style="color:var(--accent-yellow);">零件 06</div>
+        <h4>🗄️ Memory（持久化状态）</h4>
+        <p>磁盘上的状态文件，跨轮跨天都在。agent 会忘，仓库不会。</p>
+        <div class="part-quote">"The agent forgets, the repo doesn't."</div>
+      </div>
+    </div>
+
+    <!-- Generator vs Evaluator -->
+    <h3 style="margin:2rem 0 1rem;font-size:1.1rem;">⚖️ 生成器与评判器：为什么写代码的 AI 不能给自己打分</h3>
+    <div class="grid-2">
+      <div class="card" style="border-left:4px solid var(--accent-red);">
+        <h3 style="color:var(--accent-red);">❌ 生成器自评</h3>
+        <p>"When asked to evaluate work they've produced, agents tend to respond by confidently praising the work — even
+          when, to a human observer, the quality is obviously mediocre."</p>
+        <p style="margin-top:0.75rem;font-size:0.82rem;color:var(--text-dim);">
+          生成器的上下文中已塞满「我为什么这么写」的理由。它看自己的代码，看到的是推导过程而非结果。
+        </p>
+      </div>
+      <div class="card" style="border-left:4px solid var(--accent-green);">
+        <h3 style="color:var(--accent-green);">✅ 独立评判器</h3>
+        <p>"Tuning a standalone evaluator to be skeptical turns out to be far more tractable than making a generator
+          critical of its own work."</p>
+        <p style="margin-top:0.75rem;font-size:0.82rem;color:var(--text-dim);">
+          借鉴 GAN 思想：generator 写，evaluator 审，结构上把「写」和「判断」彻底分开。评判器要会动手（Playwright MCP），不只是读。
+        </p>
+      </div>
+    </div>
+
+    <!-- Maker-Checker -->
+    <div class="card" style="margin-top:1.5rem;border-left:4px solid var(--accent-cyan);">
+      <h3 style="color:var(--accent-cyan);">🏦 Maker-Checker 原则（银行级风控）</h3>
+      <p style="font-size:0.88rem;">
+        银行里转大额，录入和复核必须是两个人。/goal 命令把这条老规矩塞进了 agent 循环：<br>
+        <strong>每跑完一轮，一个又小又快的 fresh model 检查条件成立没有</strong>。不成立就再跑一轮，成立才放行。<br>
+        <span style="font-size:0.82rem;color:var(--text-dim);">
+          评判器的默认态度应该是「这段代码是坏的，除非被证明能跑」。
+        </span>
+      </p>
+    </div>
+
+    <!-- ==================== PART 3: WHERE IT RUNS ==================== -->
+    <div class="section-title">
+      <div class="icon" style="background:rgba(63,185,80,0.15);color:var(--accent-green);">③</div>
+      <h2>第三部分：它在哪跑、要什么代价</h2>
+      <span class="tag">真实案例 · 四笔账</span>
+    </div>
+
+    <!-- Three Cases -->
+    <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">📊 三个真实的 Loop</h3>
+
+    <div class="case-card">
+      <h4>🌅 一、Addy 的早晨 <span class="case-stat">个人级</span></h4>
+      <p>
+        每天早上 automation 自动醒来，读 CI 和 issue，开 worktree，子 agent 起草和审查，过了就自动开 PR，
+        没把握的丢进收件箱等人，状态写进文件留给第二天。一个人，一台机器，替你把脏活先过一遍。
+      </p>
+    </div>
+
+    <div class="case-card">
+      <h4>🏢 二、Stripe 的 Minions <span class="case-stat">企业级</span></h4>
+      <p>
+        <strong>每周合并 1300+ PR，没有一行人手写。</strong>在 Slack 里 @ Minion bot 即可触发。
+        核心架构：确定性 orchestrator 备齐上下文 → LLM agent 写代码 → 硬编码 pipeline 跑 linter → agent 修 lint → git commit。
+        底层是开源工具 Goose 的 fork。核心论点：<strong>AI 的可靠性来自约束的质量，不是模型的大小。</strong>
+        沙箱用 Devbox 跑在 EC2 上，「cattle not pets」，用完即弃。
+      </p>
+      <table class="comp-table" style="margin-top:0.75rem;">
+        <tr>
+          <th>环节</th>
+          <th>谁来做</th>
+        </tr>
+        <tr>
+          <td>触发</td>
+          <td>人（Slack @ 或 emoji）</td>
+        </tr>
+        <tr>
+          <td>备上下文</td>
+          <td>确定性 orchestrator（非 LLM）</td>
+        </tr>
+        <tr>
+          <td>写代码</td>
+          <td>LLM agent</td>
+        </tr>
+        <tr>
+          <td>跑 linter / commit</td>
+          <td>硬编码 pipeline（agent 跳不过）</td>
+        </tr>
+        <tr>
+          <td>Review 1300 个 PR</td>
+          <td>人</td>
+        </tr>
+      </table>
+    </div>
+
+    <!-- Scheduling comparison -->
+    <h3 style="margin:2rem 0 1rem;font-size:1.1rem;">☁️ 调度方案对比</h3>
+    <table class="comp-table">
+      <tr>
+        <th>特性</th>
+        <th>Cloud Routines</th>
+        <th>Desktop 定时任务</th>
+        <th>/loop</th>
+      </tr>
+      <tr>
+        <td>跑在哪</td>
+        <td>Anthropic 云</td>
+        <td>你的机器</td>
+        <td>你的机器</td>
+      </tr>
+      <tr>
+        <td>需要开机吗</td>
+        <td style="color:var(--accent-green);">否</td>
+        <td style="color:var(--accent-red);">是</td>
+        <td style="color:var(--accent-red);">是</td>
+      </tr>
+      <tr>
+        <td>最小间隔</td>
+        <td>1 小时</td>
+        <td>1 分钟</td>
+        <td>1 分钟</td>
+      </tr>
+      <tr>
+        <td>能看本地文件吗</td>
+        <td>否（fresh clone）</td>
+        <td>能</td>
+        <td>能</td>
+      </tr>
+    </table>
+
+    <!-- Four Costs -->
+    <h3 style="margin:2rem 0 1rem;font-size:1.1rem;">📉 四笔代价之账</h3>
+    <p style="color:var(--text-dim);font-size:0.88rem;margin-bottom:1rem;">
+      "A loop running unattended is also a loop making mistakes unattended."<br>
+      <strong style="color:var(--accent-orange);">—— Addy Osmani</strong>
+    </p>
+    <table class="costs-table">
+      <thead>
+        <tr>
+          <th>代价</th>
+          <th>症状</th>
+          <th>一句话防范</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="cost-name" style="color:var(--accent-red);">🔴 验证债</td>
+          <td>产出堆着没人验，错误安静积累</td>
+          <td>装一个跟干活的不是同一个的评判者</td>
+        </tr>
+        <tr>
+          <td class="cost-name" style="color:var(--accent-yellow);">🟡 理解腐烂</td>
+          <td>代码在长，你脑里的地图停了</td>
+          <td>定期读产出，讲不出就是该更新</td>
+        </tr>
+        <tr>
+          <td class="cost-name" style="color:var(--accent-purple);">🟣 认知投降</td>
+          <td>循环给啥收啥，懒得有意见</td>
+          <td>执行可外包，拿主意不行</td>
+        </tr>
+        <tr>
+          <td class="cost-name" style="color:var(--accent-green);">🟢 Token 失控</td>
+          <td>用量剧烈波动，账单不可预测</td>
+          <td>上线前钉死预算和重试上限</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- ==================== PART 4: HOW TO START ==================== -->
+    <div class="section-title">
+      <div class="icon" style="background:rgba(188,140,255,0.15);color:var(--accent-purple);">④</div>
+      <h2>第四部分：你怎么开始</h2>
+      <span class="tag">工程师身份 · 动手指南</span>
+    </div>
+
+    <!-- Stay the Engineer -->
+    <div class="card" style="margin-bottom:2rem;border-left:4px solid var(--accent-purple);">
+      <h3 style="color:var(--accent-purple);">👷 当工程师，不只是按下启动键</h3>
+      <p style="font-size:0.92rem;margin-top:0.75rem;">
+        "Two people can build the same loop and get opposite outcomes." —— 一个人用循环是为了在吃透的事情上跑得更快，
+        另一个人是为了不必再去理解。<strong style="color:var(--text);">循环本身不偏向任何一边，它只是个忠实的乘号。</strong>
+      </p>
+      <p style="font-size:0.88rem;margin-top:0.75rem;color:var(--accent-orange);font-style:italic;">
+        "Build the loop. But build it like someone who intends to stay the engineer, not just the person who presses
+        go."
+      </p>
+      <p style="font-size:0.85rem;margin-top:0.75rem;color:var(--text-dim);">
+        循环让生成变得极其便宜，代码/方案/PR 都能批量造。稀缺的是<strong style="color:var(--text);">判断力</strong>——
+        知道哪个方案是对的、哪行代码该拦下来、哪个产出虽然能跑但根上错了。
+      </p>
+    </div>
+
+    <!-- Tool Comparison -->
+    <h3 style="margin:1.5rem 0 1rem;font-size:1.1rem;">🔧 工具现状速查（2026年6月）</h3>
+    <table class="comp-table">
+      <tr>
+        <th>能力</th>
+        <th>Claude Code</th>
+        <th>Codex</th>
+      </tr>
+      <tr>
+        <td>定时调度</td>
+        <td>/loop（后台定时 worker）</td>
+        <td>Automations 标签页（daily/weekly + cron）</td>
+      </tr>
+      <tr>
+        <td>跑到条件满足</td>
+        <td>/goal</td>
+        <td>—（靠 automation 重跑 + 判断）</td>
+      </tr>
+      <tr>
+        <td>并行隔离</td>
+        <td>--worktree / -w</td>
+        <td>专用 background worktree → Triage 收件箱</td>
+      </tr>
+      <tr>
+        <td>子 agent</td>
+        <td>Subagents / Agent Teams</td>
+        <td>.codex/agents/ TOML 定义</td>
+      </tr>
+      <tr>
+        <td>外部连接</td>
+        <td>MCP + Plugins</td>
+        <td>MCP connector</td>
+      </tr>
+      <tr>
+        <td>显式调技能</td>
+        <td>Skills (SKILL.md)</td>
+        <td>$skill-name</td>
+      </tr>
+      <tr>
+        <td>关机也跑</td>
+        <td>Cloud Routines（云端）</td>
+        <td>云端（规划中 Codex Jobs）</td>
+      </tr>
+    </table>
+
+    <!-- First Loop Checklist -->
+    <h3 style="margin:2rem 0 1rem;font-size:1.1rem;">✅ 第一个 Loop 检查清单</h3>
+    <p style="color:var(--text-dim);font-size:0.85rem;margin-bottom:1rem;">
+      前两条决定能不能跑，后四条决定会不会闯祸。新手最容易只搭前两条就上线。
+    </p>
+    <ul class="checklist">
+      <li>
+        <span class="check-icon">✓</span>
+        <div><span class="check-label">发现源</span><br><span class="check-desc">它定时去读什么？（CI / issue / commit / 收件箱）</span>
+        </div>
+      </li>
+      <li>
+        <span class="check-icon">✓</span>
+        <div><span class="check-label">状态文件</span><br><span class="check-desc">跨轮的记忆落在哪个磁盘文件上？</span></div>
+      </li>
+      <li>
+        <span class="check-icon">✓</span>
+        <div><span class="check-label">Evaluator</span><br><span class="check-desc">有没有一个独立的、会说「不」的检查？</span></div>
+      </li>
+      <li>
+        <span class="check-icon">✓</span>
+        <div><span class="check-label">隔离</span><br><span class="check-desc">并行的 agent 是不是各自一个 worktree？</span></div>
+      </li>
+      <li>
+        <span class="check-icon">✓</span>
+        <div><span class="check-label">Token 上限</span><br><span class="check-desc">设没设花费天花板？跑飞了谁拦得住？</span></div>
+      </li>
+      <li>
+        <span class="check-icon">✓</span>
+        <div><span class="check-label">人工复核点</span><br><span class="check-desc">哪一步停下来等你看一眼，而不是一路自动到底？</span></div>
+      </li>
+    </ul>
+
+    <!-- ==================== FLOW DIAGRAM ==================== -->
+    <h3 style="margin:2.5rem 0 1rem;font-size:1.1rem;">🗺️ Loop 全景流程图</h3>
+    <div class="flow-container">
+      <div class="flow-node primary">
+        <div class="fn-title">⏱️ Automation 触发</div>
+        <div class="fn-desc">定时 / Slack / 事件驱动</div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-node secondary">
+        <div class="fn-title">🔍 发现 (Discovery)</div>
+        <div class="fn-desc">Skill 读 CI / Issue / Commit</div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-node">
+        <div class="fn-title">📦 交付 (Handoff)</div>
+        <div class="fn-desc">每个任务开独立 worktree</div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-side">
+        <div class="flow-node success">
+          <div class="fn-title">✍️ Generator Agent</div>
+          <div class="fn-desc">起草修复 / 写代码</div>
+        </div>
+        <div class="flow-node warning">
+          <div class="fn-title">🔎 Evaluator Agent</div>
+          <div class="fn-desc">不同指令 · 可能换模型</div>
+        </div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-node" style="border-color:var(--accent-yellow);">
+        <div class="fn-title" style="color:var(--accent-yellow);">⚡ 能做「不」的检查</div>
+        <div class="fn-desc">/goal · Fresh Model · 硬编码 Gate</div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-side">
+        <div class="flow-node" style="border-color:var(--accent-cyan);">
+          <div class="fn-title" style="color:var(--accent-cyan);">💾 持久化</div>
+          <div class="fn-desc">PR + Ticket + 状态文件</div>
+        </div>
+        <div class="flow-node" style="border-color:var(--accent-pink);">
+          <div class="fn-title" style="color:var(--accent-pink);">📥 人工收件箱</div>
+          <div class="fn-desc">处理不了的 → 等人看</div>
+        </div>
+      </div>
+      <div class="flow-connector"></div>
+      <div class="flow-node primary">
+        <div class="fn-title">🔄 回到发现</div>
+        <div class="fn-desc">状态文件续上，继续下一圈</div>
+      </div>
+    </div>
+
+    <!-- ==================== FOOTER ==================== -->
+    <!-- <div class="footer">
+  <p>
+    <span class="author">花叔</span> · AI Native Coder · Loop Engineering 橙皮书 v260615<br>
+    所有橙皮书免费下载：<span style="color:var(--accent-orange);">huasheng.ai/orange-books</span><br>
+    <span style="opacity:0.5;margin-top:0.5rem;display:inline-block;">
+      此 HTML 图示由 AI 自动生成 · 基于 32 页 PDF 全文提取 · 2026年6月
+    </span>
+  </p>
+</div> -->
+
+  </div><!-- /container -->
+</body>
+
+</html>
