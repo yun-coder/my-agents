@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>长期记忆系统架构</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #0f0f23; color: #e0e0e0; padding: 30px; }
+h1 { text-align: center; font-size: 28px; margin-bottom: 6px; color: #7c4dff; }
+.subtitle { text-align: center; font-size: 14px; color: #90a4ae; margin-bottom: 28px; }
+.container { max-width: 1100px; margin: 0 auto; }
+section { background: #1a1a2e; border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid #2a2a4a; }
+h2 { font-size: 20px; color: #b388ff; margin-bottom: 14px; border-left: 4px solid #7c4dff; padding-left: 12px; }
+h3 { font-size: 16px; color: #90caf9; margin: 14px 0 8px; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+th { background: #4a148c; color: #fff; padding: 9px 12px; text-align: left; font-size: 13px; }
+td { padding: 8px 12px; border-bottom: 1px solid #1a237e; font-size: 13px; }
+tr:hover td { background: #1a1a3e; }
+code { background: #0d1b2a; padding: 2px 6px; border-radius: 4px; font-size: 12px; color: #80cbc4; }
+.legend { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="container">
+<h1>长期记忆系统架构</h1>
+<p class="subtitle">让 Agent 记住用户——记忆分层、提取、存储与检索的全链路</p>
+
+<!-- Section 1: 记忆三层架构 -->
+<section>
+<h2>一、记忆三层架构</h2>
+<svg width="1040" height="420" viewBox="0 0 1040 420">
+    <!-- Background grid -->
+    <defs>
+        <pattern id="grid1" width="30" height="30" patternUnits="userSpaceOnUse">
+            <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1a237e" stroke-width="0.3"/>
+        </pattern>
+    </defs>
+    <rect width="1040" height="420" fill="url(#grid1)" opacity="0.3"/>
+
+    <!-- Layer 1: 短期记忆 -->
+    <rect x="270" y="30" width="500" height="80" rx="12" fill="#1a237e" opacity="0.7" stroke="#3949ab" stroke-width="2"/>
+    <text x="520" y="55" fill="#c5cae9" font-size="15" text-anchor="middle" font-weight="bold">短期记忆</text>
+    <text x="520" y="75" fill="#9fa8da" font-size="11" text-anchor="middle">时间跨度: 当前对话 | 存储: 原始消息历史 | 用途: 维持上下文</text>
+    <text x="520" y="95" fill="#7986cb" font-size="10" text-anchor="middle">窗口过期后自动丢弃</text>
+
+    <!-- Arrow down -->
+    <line x1="520" y1="110" x2="520" y2="140" stroke="#546e7a" stroke-width="2"/>
+    <polygon points="516,138 524,138 520,146" fill="#546e7a"/>
+    <text x="530" y="130" fill="#ffd54f" font-size="10">LLM 分析对话</text>
+
+    <!-- Layer 2: 长期记忆 -->
+    <rect x="270" y="140" width="500" height="80" rx="12" fill="#1b5e20" opacity="0.6" stroke="#4caf50" stroke-width="2"/>
+    <text x="520" y="165" fill="#c8e6c9" font-size="15" text-anchor="middle" font-weight="bold">长期记忆</text>
+    <text x="520" y="185" fill="#a5d6a7" font-size="11" text-anchor="middle">时间跨度: 跨会话 | 存储: 结构化摘要 + 向量 | 用途: 用户画像、偏好</text>
+    <text x="520" y="205" fill="#81c784" font-size="10" text-anchor="middle">持久化存储，按需检索</text>
+
+    <!-- Arrow down -->
+    <line x1="520" y1="220" x2="520" y2="250" stroke="#546e7a" stroke-width="2"/>
+    <polygon points="516,248 524,248 520,256" fill="#546e7a"/>
+    <text x="530" y="240" fill="#ffd54f" font-size="10">分类存储</text>
+
+    <!-- Layer 3: 事实记忆 -->
+    <rect x="60" y="270" width="280" height="120" rx="12" fill="#b71c1c" opacity="0.5" stroke="#ef5350" stroke-width="2"/>
+    <text x="200" y="295" fill="#ffcdd2" font-size="14" text-anchor="middle" font-weight="bold">事实记忆</text>
+    <text x="200" y="315" fill="#ef9a9a" font-size="11" text-anchor="middle">永久 · 知识图谱 / Key-Value</text>
+    <text x="200" y="335" fill="#ef9a9a" font-size="11" text-anchor="middle">用户属性、配置</text>
+    <text x="200" y="355" fill="#ef9a9a" font-size="10" text-anchor="middle">例: "姓名: 张三"</text>
+    <text x="200" y="375" fill="#ef9a9a" font-size="10" text-anchor="middle">例: "职业: Python 开发者"</text>
+
+    <!-- Layer 3b: 情景记忆 -->
+    <rect x="380" y="270" width="280" height="120" rx="12" fill="#e65100" opacity="0.5" stroke="#ff9800" stroke-width="2"/>
+    <text x="520" y="295" fill="#ffe0b2" font-size="14" text-anchor="middle" font-weight="bold">情景记忆</text>
+    <text x="520" y="315" fill="#ffcc80" font-size="11" text-anchor="middle">特定事件记录 · 事件日志</text>
+    <text x="520" y="335" fill="#ffcc80" font-size="11" text-anchor="middle">之前交互的参考</text>
+    <text x="520" y="355" fill="#ffcc80" font-size="10" text-anchor="middle">例: "讨论了 LangGraph 架构"</text>
+    <text x="520" y="375" fill="#ffcc80" font-size="10" text-anchor="middle">保留最近 100 条</text>
+
+    <!-- Layer 3c: 偏好记忆 -->
+    <rect x="700" y="270" width="280" height="120" rx="12" fill="#4a148c" opacity="0.5" stroke="#ba68c8" stroke-width="2"/>
+    <text x="840" y="295" fill="#e1bee7" font-size="14" text-anchor="middle" font-weight="bold">偏好记忆</text>
+    <text x="840" y="315" fill="#ce93d8" font-size="11" text-anchor="middle">用户偏好 · 分类标签</text>
+    <text x="840" y="335" fill="#ce93d8" font-size="11" text-anchor="middle">风格偏好、兴趣领域</text>
+    <text x="840" y="355" fill="#ce93d8" font-size="10" text-anchor="middle">例: "偏好简洁回答"</text>
+    <text x="840" y="375" fill="#ce93d8" font-size="10" text-anchor="middle">例: "关注 AI 领域"</text>
+
+    <!-- Bottom arrow: retrieval -->
+    <line x1="520" y1="390" x2="520" y2="415" stroke="#546e7a" stroke-width="2"/>
+    <polygon points="516,413 524,413 520,421" fill="#546e7a"/>
+    <text x="530" y="415" fill="#ffd54f" font-size="10">检索注入</text>
+</svg>
+</section>
+
+<!-- Section 2: Mem0 工作流程 -->
+<section>
+<h2>二、Mem0 记忆生命周期</h2>
+<svg width="1040" height="380" viewBox="0 0 1040 380">
+    <defs>
+        <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#546e7a"/>
+        </marker>
+        <marker id="arrowhead-red" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#ef5350"/>
+        </marker>
+    </defs>
+
+    <!-- Step 1: 对话输入 -->
+    <rect x="30" y="150" width="180" height="80" rx="12" fill="#1565c0" opacity="0.8"/>
+    <text x="120" y="178" fill="#fff" font-size="13" text-anchor="middle" font-weight="bold">💬 用户对话</text>
+    <text x="120" y="198" fill="#bbdefb" font-size="10" text-anchor="middle">user: "我叫张三"</text>
+    <text x="120" y="215" fill="#bbdefb" font-size="10" text-anchor="middle">assistant: "你好张三!"</text>
+
+    <!-- Arrow -->
+    <line x1="210" y1="190" x2="270" y2="190" stroke="#546e7a" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+    <!-- Step 2: 信息提取 -->
+    <rect x="270" y="130" width="180" height="120" rx="12" fill="#c62828" opacity="0.8"/>
+    <text x="360" y="155" fill="#fff" font-size="13" text-anchor="middle" font-weight="bold">🔍 信息提取</text>
+    <text x="360" y="175" fill="#ffcdd2" font-size="10" text-anchor="middle">LLM 分析消息对</text>
+    <text x="360" y="193" fill="#ffcdd2" font-size="10" text-anchor="middle">提取可存储事实</text>
+    <text x="360" y="213" fill="#ffcdd2" font-size="10" text-anchor="middle">分类 + 置信度评分</text>
+    <text x="360" y="233" fill="#ffcdd2" font-size="9" text-anchor="middle">"Python 开发者" conf:0.95</text>
+
+    <!-- Arrow -->
+    <line x1="450" y1="190" x2="510" y2="190" stroke="#546e7a" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+    <!-- Step 3: 冲突检测 -->
+    <rect x="510" y="130" width="180" height="120" rx="12" fill="#e65100" opacity="0.8"/>
+    <text x="600" y="155" fill="#fff" font-size="13" text-anchor="middle" font-weight="bold">⚡ 冲突检测</text>
+    <text x="600" y="175" fill="#ffe0b2" font-size="10" text-anchor="middle">对比已有记忆</text>
+    <text x="600" y="193" fill="#ffe0b2" font-size="10" text-anchor="middle">冲突 → 更新</text>
+    <text x="600" y="213" fill="#ffe0b2" font-size="10" text-anchor="middle">无冲突 → 追加</text>
+    <text x="600" y="233" fill="#ffe0b2" font-size="9" text-anchor="middle">"职业: 高级架构师"</text>
+
+    <!-- Arrow -->
+    <line x1="690" y1="190" x2="750" y2="190" stroke="#546e7a" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+    <!-- Step 4: 向量化存储 -->
+    <rect x="750" y="130" width="260" height="120" rx="12" fill="#4a148c" opacity="0.8"/>
+    <text x="880" y="155" fill="#fff" font-size="13" text-anchor="middle" font-weight="bold">🗄️ 向量化存储</text>
+    <text x="880" y="175" fill="#e1bee7" font-size="10" text-anchor="middle">Embedding 模型编码</text>
+    <text x="880" y="193" fill="#e1bee7" font-size="10" text-anchor="middle">向量 → Qdrant/Pinecone</text>
+    <text x="880" y="213" fill="#e1bee7" font-size="10" text-anchor="middle">事实 → Key-Value DB</text>
+    <text x="880" y="233" fill="#e1bee7" font-size="9" text-anchor="middle">向量: [0.23, -0.87, ...]</text>
+
+    <!-- Retrieval arrow (bottom row) -->
+    <line x1="880" y1="250" x2="880" y2="310" stroke="#546e7a" stroke-width="2" marker-end="url(#arrowhead)"/>
+    <text x="890" y="285" fill="#ffd54f" font-size="10">检索查询</text>
+
+    <!-- Step 5: 相关性检索 -->
+    <rect x="750" y="310" width="260" height="60" rx="12" fill="#2e7d32" opacity="0.8"/>
+    <text x="880" y="335" fill="#fff" font-size="13" text-anchor="middle" font-weight="bold">🔎 相关性检索</text>
+    <text x="880" y="353" fill="#c8e6c9" font-size="10" text-anchor="middle">向量相似度匹配 → 返回相关记忆</text>
+
+    <!-- Arrow back to start -->
+    <line x1="750" y1="340" x2="210" y2="340" stroke="#546e7a" stroke-width="1" stroke-dasharray="5,4"/>
+    <line x1="210" y1="340" x2="210" y2="230" stroke="#546e7a" stroke-width="1" stroke-dasharray="5,4"/>
+    <polygon points="210,226 210,234 202,230" fill="#546e7a"/>
+    <text x="200" y="290" fill="#546e7a" font-size="9" text-anchor="middle" transform="rotate(-90,200,290)">注入 System Prompt</text>
+</svg>
+</section>
+
+<!-- Section 3: 记忆注入 System Prompt -->
+<section>
+<h2>三、记忆注入 System Prompt</h2>
+<svg width="1040" height="300" viewBox="0 0 1040 300">
+    <!-- Flow: Query → Memory Retrieval → Inject → LLM → Response -->
+    <rect x="10" y="100" width="140" height="100" rx="10" fill="#1565c0" opacity="0.8"/>
+    <text x="80" y="130" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">用户提问</text>
+    <text x="80" y="150" fill="#bbdefb" font-size="10" text-anchor="middle">"帮我写个排序算法"</text>
+    <text x="80" y="170" fill="#bbdefb" font-size="10" text-anchor="middle">"用 Python"</text>
+
+    <line x1="150" y1="150" x2="190" y2="150" stroke="#546e7a" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+    <!-- Memory retrieval -->
+    <rect x="190" y="80" width="160" height="140" rx="10" fill="#4a148c" opacity="0.7"/>
+    <text x="270" y="105" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">记忆检索</text>
+    <text x="270" y="125" fill="#e1bee7" font-size="9" text-anchor="middle">LongTermMemory.query()</text>
+    <text x="270" y="142" fill="#e1bee7" font-size="9" text-anchor="middle">→ 事实: 职业=开发者</text>
+    <text x="270" y="158" fill="#e1bee7" font-size="9" text-anchor="middle">→ 偏好: 简洁风格</text>
+    <text x="270" y="174" fill="#e1bee7" font-size="9" text-anchor="middle">→ 最近: 讨论过排序</text>
+
+    <line x1="350" y1="150" x2="390" y2="150" stroke="#546e7a" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+    <!-- Inject -->
+    <rect x="390" y="100" width="160" height="100" rx="10" fill="#e65100" opacity="0.7"/>
+    <text x="470" y="125" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">注入 System</text>
+    <text x="470" y="145" fill="#ffe0b2" font-size="9" text-anchor="middle">messages.insert(0, {</text>
+    <text x="470" y="160" fill="#ffe0b2" font-size="9" text-anchor="middle">  role: "system",</text>
+    <text x="470" y="175" fill="#ffe0b2" font-size="9" text-anchor="middle">  content: "用户记忆..."</text>
+    <text x="470" y="190" fill="#ffe0b2" font-size="9" text-anchor="middle">})</text>
+
+    <line x1="550" y1="150" x2="590" y2="150" stroke="#546e7a" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+    <!-- LLM -->
+    <rect x="590" y="100" width="160" height="100" rx="10" fill="#c62828" opacity="0.8"/>
+    <text x="670" y="130" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">🧠 LLM 推理</text>
+    <text x="670" y="150" fill="#ffcdd2" font-size="9" text-anchor="middle">结合记忆上下文</text>
+    <text x="670" y="165" fill="#ffcdd2" font-size="9" text-anchor="middle">生成个性化回复</text>
+    <text x="670" y="180" fill="#ffcdd2" font-size="9" text-anchor="middle">简洁 + Python 代码</text>
+
+    <line x1="750" y1="150" x2="790" y2="150" stroke="#546e7a" stroke-width="2" marker-end="url(#arrowhead)"/>
+
+    <!-- Response -->
+    <rect x="790" y="80" width="240" height="140" rx="10" fill="#2e7d32" opacity="0.8"/>
+    <text x="910" y="105" fill="#fff" font-size="12" text-anchor="middle" font-weight="bold">个性化回复</text>
+    <text x="800" y="128" fill="#c8e6c9" font-size="9">## 快速排序 (Python)</text>
+    <text x="800" y="145" fill="#c8e6c9" font-size="9">```python</text>
+    <text x="800" y="162" fill="#c8e6c9" font-size="9">def quick_sort(arr):</text>
+    <text x="800" y="179" fill="#c8e6c9" font-size="9">    if len(arr) &lt;= 1: return arr</text>
+    <text x="800" y="196" fill="#c8e6c9" font-size="9">```</text>
+    <text x="910" y="213" fill="#a5d6a7" font-size="9" text-anchor="middle">← 简洁风格 + 专业术语</text>
+
+    <!-- Extraction loop (bottom) -->
+    <line x1="910" y1="220" x2="910" y2="260" stroke="#546e7a" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="910" y1="260" x2="80" y2="260" stroke="#546e7a" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="80" y1="260" x2="80" y2="200" stroke="#546e7a" stroke-width="1" stroke-dasharray="4,3"/>
+    <polygon points="80,196 80,204 72,200" fill="#546e7a"/>
+    <text x="500" y="275" fill="#78909c" font-size="10" text-anchor="middle">← 对话结束后: _extract_memory() 提取新事实 → 写入长期记忆</text>
+</svg>
+</section>
+
+<!-- Section 4: 核心挑战与策略 -->
+<section>
+<h2>四、核心挑战与应对策略</h2>
+<svg width="1040" height="260" viewBox="0 0 1040 260">
+    <defs>
+        <linearGradient id="challengeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#1a237e;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#283593;stop-opacity:1" />
+        </linearGradient>
+    </defs>
+
+    <!-- Challenge 1 -->
+    <rect x="20" y="20" width="240" height="220" rx="12" fill="url(#challengeGrad)" stroke="#3949ab" stroke-width="1"/>
+    <text x="140" y="48" fill="#ffd54f" font-size="13" text-anchor="middle" font-weight="bold">⚠️ 相关提取</text>
+    <text x="140" y="72" fill="#9fa8da" font-size="10" text-anchor="middle">从海量记忆中找出</text>
+    <text x="140" y="88" fill="#9fa8da" font-size="10" text-anchor="middle">当前对话相关的片段</text>
+    <line x1="40" y1="100" x2="240" y2="100" stroke="#3949ab" stroke-width="1"/>
+    <text x="140" y="122" fill="#80cbc4" font-size="11" text-anchor="middle" font-weight="bold">✅ 解决方案</text>
+    <text x="40" y="145" fill="#b0bec5" font-size="10">• 向量相似度检索</text>
+    <text x="40" y="163" fill="#b0bec5" font-size="10">• 限制注入条数 ≤10</text>
+    <text x="40" y="181" fill="#b0bec5" font-size="10">• 置信度过滤 (min_score)</text>
+
+    <!-- Challenge 2 -->
+    <rect x="280" y="20" width="240" height="220" rx="12" fill="url(#challengeGrad)" stroke="#3949ab" stroke-width="1"/>
+    <text x="400" y="48" fill="#ffd54f" font-size="13" text-anchor="middle" font-weight="bold">⚠️ 记忆更新</text>
+    <text x="400" y="72" fill="#9fa8da" font-size="10" text-anchor="middle">用户偏好可能变化，</text>
+    <text x="400" y="88" fill="#9fa8da" font-size="10" text-anchor="middle">需要更新而非追加</text>
+    <line x1="300" y1="100" x2="500" y2="100" stroke="#3949ab" stroke-width="1"/>
+    <text x="400" y="122" fill="#80cbc4" font-size="11" text-anchor="middle" font-weight="bold">✅ 解决方案</text>
+    <text x="300" y="145" fill="#b0bec5" font-size="10">• 冲突检测: key 匹配则覆盖</text>
+    <text x="300" y="163" fill="#b0bec5" font-size="10">• 置信度衰减: 随时间降低</text>
+    <text x="300" y="181" fill="#b0bec5" font-size="10">• 版本号追踪更新</text>
+
+    <!-- Challenge 3 -->
+    <rect x="540" y="20" width="240" height="220" rx="12" fill="url(#challengeGrad)" stroke="#3949ab" stroke-width="1"/>
+    <text x="660" y="48" fill="#ffd54f" font-size="13" text-anchor="middle" font-weight="bold">⚠️ 隐私保护</text>
+    <text x="660" y="72" fill="#9fa8da" font-size="10" text-anchor="middle">用户需要控制哪些</text>
+    <text x="660" y="88" fill="#9fa8da" font-size="10" text-anchor="middle">信息被记住</text>
+    <line x1="560" y1="100" x2="760" y2="100" stroke="#3949ab" stroke-width="1"/>
+    <text x="660" y="122" fill="#80cbc4" font-size="11" text-anchor="middle" font-weight="bold">✅ 解决方案</text>
+    <text x="560" y="145" fill="#b0bec5" font-size="10">• forget() API 删除记忆</text>
+    <text x="560" y="163" fill="#b0bec5" font-size="10">• user_id 严格隔离</text>
+    <text x="560" y="181" fill="#b0bec5" font-size="10">• 敏感信息加密存储</text>
+
+    <!-- Challenge 4 -->
+    <rect x="800" y="20" width="220" height="220" rx="12" fill="url(#challengeGrad)" stroke="#3949ab" stroke-width="1"/>
+    <text x="910" y="48" fill="#ffd54f" font-size="13" text-anchor="middle" font-weight="bold">⚠️ 存储效率</text>
+    <text x="910" y="72" fill="#9fa8da" font-size="10" text-anchor="middle">无限增长的记忆需要</text>
+    <text x="910" y="88" fill="#9fa8da" font-size="10" text-anchor="middle">压缩和过期策略</text>
+    <line x1="820" y1="100" x2="1000" y2="100" stroke="#3949ab" stroke-width="1"/>
+    <text x="910" y="122" fill="#80cbc4" font-size="11" text-anchor="middle" font-weight="bold">✅ 解决方案</text>
+    <text x="820" y="145" fill="#b0bec5" font-size="10">• 记忆压缩: 合并短记忆</text>
+    <text x="820" y="163" fill="#b0bec5" font-size="10">• LRU 淘汰策略</text>
+    <text x="820" y="181" fill="#b0bec5" font-size="10">• 定期摘要生成</text>
+</svg>
+</section>
+
+<!-- Section 5: 技术栈对比 -->
+<section>
+<h2>五、技术方案对比</h2>
+<table>
+<tr><th>方案</th><th>存储方式</th><th>冲突检测</th><th>向量检索</th><th>API Key</th><th>适用场景</th></tr>
+<tr><td style="color:#80cbc4;font-weight:bold;">Mem0</td><td>向量数据库 + KV</td><td>内置</td><td>内置</td><td>可选</td><td>通用长期记忆层</td></tr>
+<tr><td style="color:#80cbc4;font-weight:bold;">Zep</td><td>会话记忆 + 摘要</td><td>内置</td><td>内置</td><td>可选</td><td>需要对话摘要的场景</td></tr>
+<tr><td style="color:#80cbc4;font-weight:bold;">自建 LongTermMemory</td><td>JSON 文件 / SQLite</td><td>手动 (key 匹配)</td><td>无</td><td>无需</td><td>轻量级 / 离线部署</td></tr>
+<tr><td style="color:#80cbc4;font-weight:bold;">分层记忆架构</td><td>短期+向量+KV</td><td>综合</td><td>综合</td><td>按需</td><td>生产级 Agent 系统</td></tr>
+</table>
+</section>
+
+<!-- Section 6: 记忆数据模型 -->
+<section>
+<h2>六、MemoryItem 数据模型</h2>
+<svg width="1040" height="200" viewBox="0 0 1040 200">
+    <!-- Data model visualization -->
+    <rect x="20" y="20" width="420" height="160" rx="10" fill="#0d1b2a" stroke="#1565c0" stroke-width="2"/>
+    <text x="230" y="45" fill="#64b5f6" font-size="14" text-anchor="middle" font-weight="bold">@dataclass MemoryItem</text>
+
+    <text x="35" y="70" fill="#ff7043" font-size="11">id: str</text>
+    <text x="140" y="70" fill="#80cbc4" font-size="10">唯一标识符</text>
+    <text x="140" y="70" fill="#546e7a" font-size="10">fact-0, pref-1</text>
+
+    <text x="35" y="92" fill="#ff7043" font-size="11">content: str</text>
+    <text x="140" y="92" fill="#80cbc4" font-size="10">记忆内容</text>
+    <text x="140" y="92" fill="#546e7a" font-size="10">"Python 开发者"</text>
+
+    <text x="35" y="114" fill="#ff7043" font-size="11">memory_type: str</text>
+    <text x="140" y="114" fill="#80cbc4" font-size="10">类型: fact/preference/episodic</text>
+
+    <text x="35" y="136" fill="#ff7043" font-size="11">confidence: float</text>
+    <text x="140" y="136" fill="#80cbc4" font-size="10">置信度 0.0~1.0</text>
+
+    <text x="35" y="158" fill="#ff7043" font-size="11">metadata: dict</text>
+    <text x="140" y="158" fill="#80cbc4" font-size="10">{"key": "职业", "category": "info"}</text>
+
+    <!-- Storage layers -->
+    <rect x="480" y="20" width="540" height="160" rx="10" fill="#0d1b2a" stroke="#2e7d32" stroke-width="2"/>
+    <text x="750" y="45" fill="#66bb6a" font-size="14" text-anchor="middle" font-weight="bold">存储分层</text>
+
+    <rect x="500" y="58" width="230" height="40" rx="6" fill="#1b5e20" opacity="0.6"/>
+    <text x="615" y="82" fill="#c8e6c9" font-size="11" text-anchor="middle">短期记忆 → 对话窗口</text>
+
+    <rect x="750" y="58" width="250" height="40" rx="6" fill="#4a148c" opacity="0.6"/>
+    <text x="875" y="82" fill="#e1bee7" font-size="11" text-anchor="middle">长期记忆 → 向量数据库</text>
+
+    <rect x="500" y="108" width="230" height="40" rx="6" fill="#b71c1c" opacity="0.5"/>
+    <text x="615" y="132" fill="#ffcdd2" font-size="11" text-anchor="middle">事实记忆 → Key-Value</text>
+
+    <rect x="750" y="108" width="250" height="40" rx="6" fill="#e65100" opacity="0.5"/>
+    <text x="875" y="132" fill="#ffe0b2" font-size="11" text-anchor="middle">情景记忆 → 事件日志</text>
+</svg>
+</section>
+
+</div>
+</body>
+</html>

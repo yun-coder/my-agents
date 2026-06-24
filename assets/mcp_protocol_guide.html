@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP 协议完全图解 - 傻瓜版</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #0f0f23; color: #e0e0e0; padding: 30px; }
+h1 { text-align: center; font-size: 30px; margin-bottom: 6px; color: #ffd54f; }
+.subtitle { text-align: center; font-size: 15px; color: #90a4ae; margin-bottom: 30px; }
+.container { max-width: 1100px; margin: 0 auto; }
+section { background: #1a1a2e; border-radius: 16px; padding: 28px; margin-bottom: 28px; border: 1px solid #2a2a4a; }
+h2 { font-size: 20px; color: #b388ff; margin-bottom: 18px; border-left: 4px solid #7c4dff; padding-left: 12px; }
+h3 { font-size: 16px; color: #90caf9; margin: 14px 0 8px; }
+.advice-box { background: #16213e; border-radius: 10px; padding: 16px 22px; margin: 14px 0; border-left: 4px solid #ffd54f; font-size: 14px; line-height: 1.9; }
+.advice-box b { color: #ffd54f; }
+code { background: #0d1b2a; padding: 2px 8px; border-radius: 4px; font-size: 13px; color: #80cbc4; font-family: 'Consolas', monospace; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+th { background: #4a148c; color: #fff; padding: 10px 14px; text-align: left; font-size: 14px; }
+td { padding: 10px 14px; border-bottom: 1px solid #1a237e; font-size: 13px; line-height: 1.6; }
+tr:hover td { background: #1a1a3e; }
+.legend { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }
+.legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: bold; }
+.badge-client { background: #1565c0; color: #fff; }
+.badge-server { background: #c62828; color: #fff; }
+.badge-transport { background: #2e7d32; color: #fff; }
+.badge-protocol { background: #6a1b9a; color: #fff; }
+.step-row { display: flex; align-items: center; margin: 8px 0; padding: 10px 14px; background: #0f3460; border-radius: 8px; font-size: 14px; }
+.step-num { background: #ffd54f; color: #000; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; flex-shrink: 0; font-size: 13px; }
+.highlight { color: #ffd54f; font-weight: bold; }
+.warn { background: #3e2723; border: 1px solid #ff7043; border-radius: 8px; padding: 14px 18px; margin: 16px 0; font-size: 13px; line-height: 1.7; }
+.tip { background: #1b5e20; border: 1px solid #66bb6a; border-radius: 8px; padding: 14px 18px; margin: 16px 0; font-size: 13px; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>🔌 MCP 协议完全图解</h1>
+<p class="subtitle">Model Context Protocol — 让 AI 工具"即插即用"的统一标准</p>
+
+<!-- ==================== Section 0: 一句话理解 ==================== -->
+<section>
+<h2>零、一句话理解 MCP</h2>
+<div class="advice-box">
+<b>🍕 生活类比：</b>MCP 就像 <b>USB 接口</b>。以前每个 AI 工具都要单独写驱动，现在只要插上 MCP 接口，AI 就能立刻识别并使用它。<br>
+<b>📦 一句话：</b>MCP = AI 模型 + 外部工具的"通用翻译官"。
+</div>
+</section>
+
+<!-- ==================== Section 1: 核心角色 ==================== -->
+<section>
+<h2>一、MCP 只有三个角色（超简单！）</h2>
+<svg width="1040" height="300" viewBox="0 0 1040 300">
+    <defs>
+        <pattern id="grid1" width="30" height="30" patternUnits="userSpaceOnUse">
+            <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#1a237e" stroke-width="0.3"/>
+        </pattern>
+    </defs>
+    <rect width="1040" height="300" fill="url(#grid1)" opacity="0.3"/>
+
+    <!-- 角色1: Client (AI模型) -->
+    <rect x="60" y="40" width="280" height="220" rx="16" fill="#0d1b2a" stroke="#1565c0" stroke-width="3"/>
+    <circle cx="200" cy="75" r="28" fill="#1565c0"/>
+    <text x="200" y="82" fill="#fff" font-size="22" text-anchor="middle">🤖</text>
+    <text x="200" y="120" fill="#64b5f6" font-size="16" text-anchor="middle" font-weight="bold">Client 客户端</text>
+    <text x="200" y="142" fill="#90a4ae" font-size="13" text-anchor="middle">AI 模型 / Chatbot</text>
+    <text x="200" y="162" fill="#90a4ae" font-size="12" text-anchor="middle">(GPT, Claude, 本地模型...)</text>
+    <text x="200" y="192" fill="#78909c" font-size="12" text-anchor="middle">"我想用这个工具"</text>
+    <text x="200" y="212" fill="#78909c" font-size="12" text-anchor="middle">发送请求 → 接收结果</text>
+
+    <!-- 箭头1: Client → Server -->
+    <line x1="340" y1="140" x2="480" y2="140" stroke="#ffd54f" stroke-width="3"/>
+    <polygon points="476,134 486,140 476,146" fill="#ffd54f"/>
+    <text x="410" y="130" fill="#ffd54f" font-size="12" text-anchor="middle" font-weight="bold">① 请求 (Request)</text>
+
+    <!-- 箭头2: Server → Client -->
+    <line x1="480" y1="165" x2="340" y2="165" stroke="#66bb6a" stroke-width="3"/>
+    <polygon points="344,159 334,165 344,171" fill="#66bb6a"/>
+    <text x="410" y="158" fill="#66bb6a" font-size="12" text-anchor="middle" font-weight="bold">② 响应 (Response)</text>
+
+    <!-- 角色2: Transport 传输层 -->
+    <rect x="480" y="40" width="280" height="220" rx="16" fill="#0d1b2a" stroke="#2e7d32" stroke-width="3"/>
+    <circle cx="620" cy="75" r="28" fill="#2e7d32"/>
+    <text x="620" y="82" fill="#fff" font-size="22" text-anchor="middle">🔗</text>
+    <text x="620" y="120" fill="#81c784" font-size="16" text-anchor="middle" font-weight="bold">Transport 传输层</text>
+    <text x="620" y="142" fill="#90a4ae" font-size="13" text-anchor="middle">消息搬运工</text>
+    <text x="620" y="168" fill="#ffd54f" font-size="12" text-anchor="middle">标准: STDIO / HTTP / SSE</text>
+    <text x="620" y="195" fill="#78909c" font-size="12" text-anchor="middle">负责"怎么传"</text>
+    <text x="620" y="215" fill="#78909c" font-size="12" text-anchor="middle">不管"传什么"</text>
+
+    <!-- 箭头3: Server → Tool -->
+    <line x1="760" y1="140" x2="900" y2="140" stroke="#ffd54f" stroke-width="3"/>
+    <polygon points="896,134 906,140 896,146" fill="#ffd54f"/>
+    <text x="830" y="130" fill="#ffd54f" font-size="12" text-anchor="middle" font-weight="bold">③ 调用</text>
+
+    <!-- 箭头4: Tool → Server -->
+    <line x1="900" y1="165" x2="760" y2="165" stroke="#66bb6a" stroke-width="3"/>
+    <polygon points="764,159 754,165 764,171" fill="#66bb6a"/>
+    <text x="830" y="158" fill="#66bb6a" font-size="12" text-anchor="middle" font-weight="bold">④ 结果</text>
+
+    <!-- 角色3: Server (工具提供者) -->
+    <rect x="760" y="40" width="280" height="220" rx="16" fill="#0d1b2a" stroke="#c62828" stroke-width="3"/>
+    <circle cx="900" cy="75" r="28" fill="#c62828"/>
+    <text x="900" y="82" fill="#fff" font-size="22" text-anchor="middle">🛠️</text>
+    <text x="900" y="120" fill="#ef9a9a" font-size="16" text-anchor="middle" font-weight="bold">Server 服务端</text>
+    <text x="900" y="142" fill="#90a4ae" font-size="13" text-anchor="middle">工具提供方</text>
+    <text x="900" y="165" fill="#90a4ae" font-size="12" text-anchor="middle">(文件系统、数据库、API...)</text>
+    <text x="900" y="195" fill="#78909c" font-size="12" text-anchor="middle">"我有这些能力"</text>
+    <text x="900" y="215" fill="#78909c" font-size="12" text-anchor="middle">注册工具 → 执行 → 返回</text>
+</svg>
+
+<table>
+<tr><th>角色</th><th>类比</th><th>职责</th><th>常见例子</th></tr>
+<tr>
+    <td><span class="badge badge-client">Client</span></td>
+    <td>顾客点餐</td>
+    <td>发起请求，说"我需要某某功能"</td>
+    <td>Claude Desktop, Cursor, VS Code 扩展</td>
+</tr>
+<tr>
+    <td><span class="badge badge-transport">Transport</span></td>
+    <td>外卖骑手</td>
+    <td>负责把消息从 A 送到 B，不管内容</td>
+    <td>STDIO(本地进程), HTTP(网络), SSE(服务器推送)</td>
+</tr>
+<tr>
+    <td><span class="badge badge-server">Server</span></td>
+    <td>餐厅厨房</td>
+    <td>提供具体能力，执行后返回结果</td>
+    <td>文件读取器、GitHub API、数据库查询</td>
+</tr>
+</table>
+</section>
+
+<!-- ==================== Section 2: 连接流程 ==================== -->
+<section>
+<h2>二、一次完整通信的 6 步走</h2>
+<p style="color:#90a4ae; font-size:13px; margin-bottom:16px;">下面这张图展示了从"插上 USB"到"拿到答案"的完整过程。左边是 Client（AI），右边是 Server（工具），中间是来回传递的消息。</p>
+<svg width="1040" height="680" viewBox="0 0 1040 680">
+    <defs>
+        <marker id="arrow-yellow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#ffd54f"/>
+        </marker>
+        <marker id="arrow-green" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#66bb6a"/>
+        </marker>
+    </defs>
+
+    <!-- 两条竖线: Client 和 Server -->
+    <line x1="200" y1="40" x2="200" y2="640" stroke="#1565c0" stroke-width="2" stroke-dasharray="8,4"/>
+    <line x1="840" y1="40" x2="840" y2="640" stroke="#c62828" stroke-width="2" stroke-dasharray="8,4"/>
+
+    <!-- 标签 -->
+    <rect x="140" y="10" width="120" height="30" rx="15" fill="#1565c0"/>
+    <text x="200" y="30" fill="#fff" font-size="13" text-anchor="middle" font-weight="bold">🤖 Client</text>
+    <rect x="780" y="10" width="120" height="30" rx="15" fill="#c62828"/>
+    <text x="840" y="30" fill="#fff" font-size="13" text-anchor="middle" font-weight="bold">🛠️ Server</text>
+
+    <!-- Step 1 -->
+    <rect x="200" y="55" width="640" height="50" rx="8" fill="#16213e" stroke="#ffd54f" stroke-width="1.5"/>
+    <text x="520" y="75" fill="#ffd54f" font-size="14" text-anchor="middle" font-weight="bold">Step 1: Client 启动 Server 进程 (spawn)</text>
+    <text x="520" y="93" fill="#90a4ae" font-size="12" text-anchor="middle">通过 stdio / HTTP 建立通道，相当于"插上 USB"</text>
+
+    <line x1="200" y1="110" x2="840" y2="110" stroke="#ffd54f" stroke-width="2" marker-end="url(#arrow-yellow)"/>
+    <text x="520" y="100" fill="#ffd54f" font-size="11" text-anchor="middle">初始化握手 (initialize)</text>
+
+    <!-- Step 2 -->
+    <rect x="200" y="125" width="640" height="55" rx="8" fill="#16213e" stroke="#ffd54f" stroke-width="1.5"/>
+    <text x="520" y="147" fill="#ffd54f" font-size="13" text-anchor="middle" font-weight="bold">Step 2: 交换能力清单</text>
+    <text x="520" y="165" fill="#90a4ae" font-size="12" text-anchor="middle">Client 发: "我是 v1.0.0" → Server 回: "我有 3 个工具, 2 个资源"</text>
+
+    <line x1="840" y1="190" x2="200" y2="190" stroke="#66bb6a" stroke-width="2" marker-end="url(#arrow-green)"/>
+    <text x="520" y="183" fill="#66bb6a" font-size="11" text-anchor="middle">Server 能力列表 (capabilities)</text>
+
+    <!-- Step 3 -->
+    <rect x="200" y="205" width="640" height="50" rx="8" fill="#16213e" stroke="#ffd54f" stroke-width="1.5"/>
+    <text x="520" y="225" fill="#ffd54f" font-size="14" text-anchor="middle" font-weight="bold">Step 3: 列出所有可用工具 (tools/list)</text>
+    <text x="520" y="243" fill="#90a4ae" font-size="12" text-anchor="middle">Server 回复: [{"name":"read_file","description":"读取文件内容", "parameters":{"path":"string"}}]</text>
+
+    <line x1="200" y1="260" x2="840" y2="260" stroke="#ffd54f" stroke-width="2" marker-end="url(#arrow-yellow)"/>
+    <text x="520" y="252" fill="#ffd54f" font-size="11" text-anchor="middle">tools/list → 工具列表</text>
+
+    <!-- Step 4 -->
+    <rect x="200" y="275" width="640" height="50" rx="8" fill="#1a1040" stroke="#7c4dff" stroke-width="1.5"/>
+    <text x="520" y="295" fill="#b388ff" font-size="14" text-anchor="middle" font-weight="bold">Step 4: 🧠 AI 大脑决定: "这个问题需要调用 read_file 工具!"</text>
+    <text x="520" y="313" fill="#90a4ae" font-size="12" text-anchor="middle">LLM 根据工具描述，判断哪个工具能回答问题</text>
+
+    <line x1="200" y1="330" x2="840" y2="330" stroke="#ffd54f" stroke-width="2" marker-end="url(#arrow-yellow)"/>
+    <text x="520" y="322" fill="#ffd54f" font-size="11" text-anchor="middle">tools/call {name:"read_file", args:{path:"/etc/hosts"}}</text>
+
+    <!-- Step 5 -->
+    <rect x="200" y="345" width="640" height="50" rx="8" fill="#16213e" stroke="#ffd54f" stroke-width="1.5"/>
+    <text x="520" y="365" fill="#ffd54f" font-size="14" text-anchor="middle" font-weight="bold">Step 5: Server 执行实际操作 (读文件 / 查数据库 / 调 API)</text>
+    <text x="520" y="383" fill="#90a4ae" font-size="12" text-anchor="middle">这是真正干活的地方，比如从磁盘读取文件内容</text>
+
+    <line x1="840" y1="400" x2="200" y2="400" stroke="#66bb6a" stroke-width="2" marker-end="url(#arrow-green)"/>
+    <text x="520" y="393" fill="#66bb6a" font-size="11" text-anchor="middle">tools/call result → 执行结果</text>
+
+    <!-- Step 6 -->
+    <rect x="200" y="415" width="640" height="50" rx="8" fill="#16213e" stroke="#ffd54f" stroke-width="1.5"/>
+    <text x="520" y="435" fill="#ffd54f" font-size="14" text-anchor="middle" font-weight="bold">Step 6: Client 把结果交给 AI，AI 组装最终答案</text>
+    <text x="520" y="453" fill="#90a4ae" font-size="12" text-anchor="middle">"根据 /etc/hosts 文件内容，你的服务器 IP 是 192.168.1.1"</text>
+
+    <line x1="200" y1="470" x2="840" y2="470" stroke="#66bb6a" stroke-width="2" marker-end="url(#arrow-green)"/>
+    <text x="520" y="463" fill="#66bb6a" font-size="11" text-anchor="middle">最终回复给用户</text>
+
+    <!-- Step 7: 结束 -->
+    <rect x="370" y="490" width="300" height="35" rx="17" fill="#2e7d32" opacity="0.8"/>
+    <text x="520" y="512" fill="#fff" font-size="13" text-anchor="middle" font-weight="bold">✅ 完成！用户看到了答案</text>
+
+    <!-- 额外空间: 补充说明 -->
+    <rect x="200" y="545" width="640" height="100" rx="10" fill="#0d1b2a" stroke="#2a2a4a" stroke-width="1"/>
+    <text x="520" y="570" fill="#b388ff" font-size="13" text-anchor="middle" font-weight="bold">💡 关键概念</text>
+    <text x="220" y="595" fill="#e0e0e0" font-size="12">• <b style="color:#ffd54f;">tools/list</b> — Server 告诉 Client "我有什么"，Client 不用提前知道</text>
+    <text x="220" y="615" fill="#e0e0e0" font-size="12">• <b style="color:#ffd54f;">tools/call</b> — Client 说"帮我做这个"，带上参数，Server 执行后返回结果</text>
+    <text x="220" y="635" fill="#e0e0e0" font-size="12">• <b style="color:#ffd54f;">双向通信</b> — 不是一次性的，可以反复调用多个工具，直到 AI 觉得够了为止</text>
+</svg>
+</section>
+
+<!-- ==================== Section 3: 三种传输方式 ==================== -->
+<section>
+<h2>三、Transport 三种传输方式（消息怎么送？）</h2>
+<p style="color:#90a4ae; font-size:13px; margin-bottom:16px;">Transport 只管"把消息送到"，不管"送的是什么"。就像快递公司，不管你是寄文件还是寄蛋糕，它只负责安全送达。</p>
+<svg width="1040" height="500" viewBox="0 0 1040 500">
+    <!-- 1: STDIO -->
+    <rect x="20" y="20" width="330" height="460" rx="14" fill="#0d1b2a" stroke="#2e7d32" stroke-width="2"/>
+    <text x="185" y="48" fill="#81c784" font-size="16" text-anchor="middle" font-weight="bold">① STDIO (本地模式)</text>
+    <text x="185" y="78" fill="#ffd54f" font-size="28" text-anchor="middle">📋</text>
+    <text x="185" y="105" fill="#ffd54f" font-size="13" text-anchor="middle">"本地对讲机"</text>
+
+    <rect x="60" y="120" width="100" height="60" rx="8" fill="#1565c0" opacity="0.8"/>
+    <text x="110" y="145" fill="#fff" font-size="11" text-anchor="middle">Client</text>
+    <text x="110" y="160" fill="#bbdefb" font-size="10" text-anchor="middle">(同一个程序)</text>
+
+    <rect x="220" y="120" width="100" height="60" rx="8" fill="#c62828" opacity="0.8"/>
+    <text x="270" y="145" fill="#fff" font-size="11" text-anchor="middle">Server</text>
+    <text x="270" y="160" fill="#ffcdd2" font-size="10" text-anchor="middle">(子进程)</text>
+
+    <line x1="160" y1="145" x2="220" y2="145" stroke="#ffd54f" stroke-width="2.5"/>
+    <text x="190" y="135" fill="#ffd54f" font-size="10" text-anchor="middle">stdin/stdout</text>
+
+    <text x="40" y="210" fill="#90a4ae" font-size="13" font-weight="bold">特点:</text>
+    <text x="40" y="234" fill="#e0e0e0" font-size="12">✓ 最快，零网络开销</text>
+    <text x="40" y="254" fill="#e0e0e0" font-size="12">✓ 开发调试首选</text>
+    <text x="40" y="274" fill="#e0e0e0" font-size="12">✗ 只能在本地运行</text>
+    <text x="40" y="294" fill="#e0e0e0" font-size="12">✗ 不能跨机器</text>
+    <rect x="40" y="310" width="290" height="36" rx="6" fill="#1b5e20" opacity="0.6"/>
+    <text x="185" y="333" fill="#a5d6a7" font-size="12" text-anchor="middle">适用: 本机开发的工具插件</text>
+
+    <!-- 2: HTTP -->
+    <rect x="355" y="20" width="330" height="460" rx="14" fill="#0d1b2a" stroke="#1565c0" stroke-width="2"/>
+    <text x="520" y="48" fill="#64b5f6" font-size="16" text-anchor="middle" font-weight="bold">② HTTP (网络模式)</text>
+    <text x="520" y="78" fill="#ffd54f" font-size="28" text-anchor="middle">🌐</text>
+    <text x="520" y="105" fill="#ffd54f" font-size="13" text-anchor="middle">"打电话"</text>
+
+    <rect x="395" y="120" width="100" height="60" rx="8" fill="#1565c0" opacity="0.8"/>
+    <text x="445" y="145" fill="#fff" font-size="11" text-anchor="middle">Client</text>
+    <text x="445" y="160" fill="#bbdefb" font-size="10" text-anchor="middle">(浏览器/APP)</text>
+
+    <rect x="555" y="120" width="100" height="60" rx="8" fill="#c62828" opacity="0.8"/>
+    <text x="605" y="145" fill="#fff" font-size="11" text-anchor="middle">Server</text>
+    <text x="605" y="160" fill="#ffcdd2" font-size="10" text-anchor="middle">(远程服务)</text>
+
+    <line x1="495" y1="145" x2="555" y2="145" stroke="#ffd54f" stroke-width="2.5"/>
+    <text x="525" y="135" fill="#ffd54f" font-size="10" text-anchor="middle">POST /</text>
+
+    <text x="375" y="210" fill="#90a4ae" font-size="13" font-weight="bold">特点:</text>
+    <text x="375" y="234" fill="#e0e0e0" font-size="12">✓ 跨机器通信</text>
+    <text x="375" y="254" fill="#e0e0e0" font-size="12">✓ 适合 Web 部署</text>
+    <text x="375" y="274" fill="#e0e0e0" font-size="12">✗ 需要配置端口</text>
+    <text x="375" y="294" fill="#e0e0e0" font-size="12">✗ 有网络延迟</text>
+    <rect x="375" y="310" width="290" height="36" rx="6" fill="#1565c0" opacity="0.5"/>
+    <text x="520" y="333" fill="#90caf9" font-size="12" text-anchor="middle">适用: 云端工具服务</text>
+
+    <!-- 3: SSE -->
+    <rect x="690" y="20" width="330" height="460" rx="14" fill="#0d1b2a" stroke="#c62828" stroke-width="2"/>
+    <text x="855" y="48" fill="#ef9a9a" font-size="16" text-anchor="middle" font-weight="bold">③ SSE (服务器推送)</text>
+    <text x="855" y="78" fill="#ffd54f" font-size="28" text-anchor="middle">📡</text>
+    <text x="855" y="105" fill="#ffd54f" font-size="13" text-anchor="middle">"广播电台"</text>
+
+    <rect x="730" y="120" width="100" height="60" rx="8" fill="#1565c0" opacity="0.8"/>
+    <text x="780" y="145" fill="#fff" font-size="11" text-anchor="middle">Client</text>
+    <text x="780" y="160" fill="#bbdefb" font-size="10" text-anchor="middle">(监听者)</text>
+
+    <rect x="890" y="120" width="100" height="60" rx="8" fill="#c62828" opacity="0.8"/>
+    <text x="940" y="145" fill="#fff" font-size="11" text-anchor="middle">Server</text>
+    <text x="940" y="160" fill="#ffcdd2" font-size="10" text-anchor="middle">(广播站)</text>
+
+    <line x1="830" y1="145" x2="890" y2="145" stroke="#ef5350" stroke-width="2.5"/>
+    <text x="860" y="135" fill="#ef5350" font-size="10" text-anchor="middle">Stream</text>
+    <line x1="890" y1="160" x2="830" y2="160" stroke="#66bb6a" stroke-width="1.5" stroke-dasharray="4,3"/>
+    <text x="860" y="178" fill="#66bb6a" font-size="9" text-anchor="middle">HTTP 回调</text>
+
+    <text x="710" y="210" fill="#90a4ae" font-size="13" font-weight="bold">特点:</text>
+    <text x="710" y="234" fill="#e0e0e0" font-size="12">✓ Server 可主动推送</text>
+    <text x="710" y="254" fill="#e0e0e0" font-size="12">✓ 适合实时通知</text>
+    <text x="710" y="274" fill="#e0e0e0" font-size="12">✗ 实现较复杂</text>
+    <text x="710" y="294" fill="#e0e0e0" font-size="12">✗ 需要维持长连接</text>
+    <rect x="710" y="310" width="290" height="36" rx="6" fill="#c62828" opacity="0.4"/>
+    <text x="855" y="333" fill="#ef9a9a" font-size="12" text-anchor="middle">适用: 需要实时推送的场景</text>
+
+    <!-- 底部总结 -->
+    <rect x="20" y="440" width="1000" height="40" rx="8" fill="#16213e" stroke="#ffd54f" stroke-width="1"/>
+    <text x="520" y="465" fill="#ffd54f" font-size="13" text-anchor="middle">🎯 选哪个？开发调试用 STDIO，部署上云用 HTTP，需要实时推送用 SSE</text>
+</svg>
+</section>
+
+<!-- ==================== Section 4: 三种核心操作 ==================== -->
+<section>
+<h2>四、MCP 三大核心操作（能做什么？）</h2>
+<p style="color:#90a4ae; font-size:13px; margin-bottom:16px;">MCP 只有三种操作：让工具干活(T)、读取数据(R)、使用对话模板(P)。记住这三个字母就够了。</p>
+<svg width="1040" height="560" viewBox="0 0 1040 560">
+    <!-- 1: Tools -->
+    <rect x="20" y="20" width="330" height="520" rx="14" fill="#0d1b2a" stroke="#ff7043" stroke-width="2"/>
+    <circle cx="185" cy="55" r="22" fill="#ff7043"/>
+    <text x="185" y="62" fill="#fff" font-size="18" text-anchor="middle">🔧</text>
+    <text x="185" y="95" fill="#ffcc80" font-size="16" text-anchor="middle" font-weight="bold">Tools (工具)</text>
+    <text x="185" y="115" fill="#ffd54f" font-size="12" text-anchor="middle">"让我帮你干活"</text>
+
+    <rect x="40" y="130" width="290" height="110" rx="8" fill="#16213e"/>
+    <text x="55" y="152" fill="#80cbc4" font-size="12" font-weight="bold">请求:</text>
+    <text x="55" y="172" fill="#e0e0e0" font-size="11">tools/call</text>
+    <text x="55" y="190" fill="#e0e0e0" font-size="11">{</text>
+    <text x="70" y="206" fill="#80cbc4" font-size="11">  "name": "search_web",</text>
+    <text x="70" y="222" fill="#80cbc4" font-size="11">  "arguments": {"query": "天气"}</text>
+    <text x="55" y="238" fill="#e0e0e0" font-size="11">}</text>
+
+    <rect x="40" y="250" width="290" height="90" rx="8" fill="#16213e"/>
+    <text x="55" y="272" fill="#80cbc4" font-size="12" font-weight="bold">响应:</text>
+    <text x="55" y="292" fill="#e0e0e0" font-size="11">{"content": [{"type": "text",</text>
+    <text x="55" y="310" fill="#e0e0e0" font-size="11">  "text": "今天晴，25°C"}]}</text>
+
+    <text x="40" y="360" fill="#90a4ae" font-size="12" font-weight="bold">常见工具:</text>
+    <text x="40" y="382" fill="#e0e0e0" font-size="11">• 搜索网页 / 查天气</text>
+    <text x="40" y="402" fill="#e0e0e0" font-size="11">• 读文件 / 写数据库</text>
+    <text x="40" y="422" fill="#e0e0e0" font-size="11">• 调 API / 发邮件</text>
+    <text x="40" y="442" fill="#e0e0e0" font-size="11">• 执行命令 / 算数学</text>
+    <rect x="40" y="460" width="290" height="50" rx="8" fill="#bf360c" opacity="0.4"/>
+    <text x="185" y="482" fill="#ffcc80" font-size="12" text-anchor="middle">🎯 核心操作，AI 最常调用</text>
+    <text x="185" y="500" fill="#90a4ae" font-size="11" text-anchor="middle">占所有 MCP 调用的 80%+</text>
+
+    <!-- 2: Resources -->
+    <rect x="355" y="20" width="330" height="520" rx="14" fill="#0d1b2a" stroke="#42a5f5" stroke-width="2"/>
+    <circle cx="520" cy="55" r="22" fill="#42a5f5"/>
+    <text x="520" y="62" fill="#fff" font-size="18" text-anchor="middle">📄</text>
+    <text x="520" y="95" fill="#90caf9" font-size="16" text-anchor="middle" font-weight="bold">Resources (资源)</text>
+    <text x="520" y="115" fill="#ffd54f" font-size="12" text-anchor="middle">"这是我的数据"</text>
+
+    <rect x="375" y="130" width="290" height="110" rx="8" fill="#16213e"/>
+    <text x="390" y="152" fill="#80cbc4" font-size="12" font-weight="bold">请求:</text>
+    <text x="390" y="172" fill="#e0e0e0" font-size="11">resources/read</text>
+    <text x="390" y="190" fill="#e0e0e0" font-size="11">{</text>
+    <text x="405" y="206" fill="#80cbc4" font-size="11">  "uri": "file:///README.md"</text>
+    <text x="390" y="222" fill="#e0e0e0" font-size="11">}</text>
+
+    <rect x="375" y="250" width="290" height="90" rx="8" fill="#16213e"/>
+    <text x="390" y="272" fill="#80cbc4" font-size="12" font-weight="bold">响应:</text>
+    <text x="390" y="292" fill="#e0e0e0" font-size="11">{"contents": [{</text>
+    <text x="390" y="310" fill="#e0e0e0" font-size="11">  "uri": "file:///README.md",</text>
+    <text x="390" y="328" fill="#e0e0e0" font-size="11">  "text": "# My Project..."</text>
+    <text x="390" y="346" fill="#e0e0e0" font-size="11">}]}</text>
+
+    <text x="375" y="360" fill="#90a4ae" font-size="12" font-weight="bold">常见资源:</text>
+    <text x="375" y="382" fill="#e0e0e0" font-size="11">• 文件内容 (file://)</text>
+    <text x="375" y="402" fill="#e0e0e0" font-size="11">• 数据库记录</text>
+    <text x="375" y="422" fill="#e0e0e0" font-size="11">• API 返回的数据</text>
+    <text x="375" y="442" fill="#e0e0e0" font-size="11">• 配置文件</text>
+    <rect x="375" y="460" width="290" height="50" rx="8" fill="#0d47a1" opacity="0.4"/>
+    <text x="520" y="482" fill="#90caf9" font-size="12" text-anchor="middle">🎯 只读操作，AI 用来"看资料"</text>
+    <text x="520" y="500" fill="#90a4ae" font-size="11" text-anchor="middle">像给 AI 读文件，但不修改</text>
+
+    <!-- 3: Prompts -->
+    <rect x="690" y="20" width="330" height="520" rx="14" fill="#0d1b2a" stroke="#ab47bc" stroke-width="2"/>
+    <circle cx="855" cy="55" r="22" fill="#ab47bc"/>
+    <text x="855" y="62" fill="#fff" font-size="18" text-anchor="middle">💬</text>
+    <text x="855" y="95" fill="#ce93d8" font-size="16" text-anchor="middle" font-weight="bold">Prompts (提示词)</text>
+    <text x="855" y="115" fill="#ffd54f" font-size="12" text-anchor="middle">"这是对话模板"</text>
+
+    <rect x="710" y="130" width="290" height="110" rx="8" fill="#16213e"/>
+    <text x="725" y="152" fill="#80cbc4" font-size="12" font-weight="bold">请求:</text>
+    <text x="725" y="172" fill="#e0e0e0" font-size="11">prompts/get</text>
+    <text x="725" y="190" fill="#e0e0e0" font-size="11">{</text>
+    <text x="740" y="206" fill="#80cbc4" font-size="11">  "name": "code_review",</text>
+    <text x="740" y="222" fill="#80cbc4" font-size="11">  "arguments": {"file": "main.py"}</text>
+    <text x="725" y="238" fill="#e0e0e0" font-size="11">}</text>
+
+    <rect x="710" y="250" width="290" height="90" rx="8" fill="#16213e"/>
+    <text x="725" y="272" fill="#80cbc4" font-size="12" font-weight="bold">响应:</text>
+    <text x="725" y="292" fill="#e0e0e0" font-size="11">{"messages": [{</text>
+    <text x="725" y="310" fill="#e0e0e0" font-size="11">  "role": "user",</text>
+    <text x="725" y="328" fill="#e0e0e0" font-size="11">  "content": "请审查 main.py..."</text>
+    <text x="725" y="346" fill="#e0e0e0" font-size="11">}]}</text>
+
+    <text x="710" y="360" fill="#90a4ae" font-size="12" font-weight="bold">常见提示词:</text>
+    <text x="710" y="382" fill="#e0e0e0" font-size="11">• 代码审查模板</text>
+    <text x="710" y="402" fill="#e0e0e0" font-size="11">• 文档生成模板</text>
+    <text x="710" y="422" fill="#e0e0e0" font-size="11">• 日志分析模板</text>
+    <text x="710" y="442" fill="#e0e0e0" font-size="11">• 报告撰写模板</text>
+    <rect x="710" y="460" width="290" height="50" rx="8" fill="#4a148c" opacity="0.4"/>
+    <text x="855" y="482" fill="#ce93d8" font-size="12" text-anchor="middle">🎯 预定义模板，AI 拿来就用</text>
+    <text x="855" y="500" fill="#90a4ae" font-size="11" text-anchor="middle">相当于"快捷指令"</text>
+</svg>
+</section>
+
+<!-- ==================== Section 5: 完整架构图 ==================== -->
+<section>
+<h2>五、完整架构图（一张图看懂全局）</h2>
+<p style="color:#90a4ae; font-size:13px; margin-bottom:16px;">从上往下看：传输层负责"怎么送"，协议层定义"说什么"，Client 和 Server 各自内部有不同的组件分工合作。</p>
+<svg width="1040" height="720" viewBox="0 0 1040 720">
+    <defs>
+        <linearGradient id="clientGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#1565c0;stop-opacity:0.3"/>
+            <stop offset="100%" style="stop-color:#0d1b2a;stop-opacity:0.9"/>
+        </linearGradient>
+        <linearGradient id="serverGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#c62828;stop-opacity:0.3"/>
+            <stop offset="100%" style="stop-color:#0d1b2a;stop-opacity:0.9"/>
+        </linearGradient>
+        <linearGradient id="layerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" style="stop-color:#6a1b9a;stop-opacity:0.15"/>
+            <stop offset="100%" style="stop-color:#6a1b9a;stop-opacity:0.05"/>
+        </linearGradient>
+    </defs>
+
+    <!-- 背景分层 -->
+    <rect x="20" y="20" width="1000" height="680" rx="16" fill="url(#layerGrad)" stroke="#6a1b9a" stroke-width="1"/>
+    <text x="520" y="42" fill="#b388ff" font-size="14" text-anchor="middle" font-weight="bold">MCP 协议栈全景</text>
+
+    <!-- 最底层: 传输层 -->
+    <rect x="40" y="55" width="960" height="80" rx="10" fill="#0d1b2a" stroke="#2e7d32" stroke-width="2"/>
+    <text x="520" y="77" fill="#81c784" font-size="13" text-anchor="middle" font-weight="bold">📡 Transport Layer — 传输层</text>
+    <text x="520" y="97" fill="#90a4ae" font-size="12" text-anchor="middle">负责消息的物理传输，不关心内容</text>
+
+    <rect x="120" y="108" width="180" height="22" rx="11" fill="#2e7d32" opacity="0.8"/>
+    <text x="210" y="123" fill="#fff" font-size="11" text-anchor="middle" font-weight="bold">STDIO (本地管道)</text>
+    <rect x="340" y="108" width="180" height="22" rx="11" fill="#2e7d32" opacity="0.8"/>
+    <text x="430" y="123" fill="#fff" font-size="11" text-anchor="middle" font-weight="bold">HTTP (REST API)</text>
+    <rect x="560" y="108" width="180" height="22" rx="11" fill="#2e7d32" opacity="0.8"/>
+    <text x="650" y="123" fill="#fff" font-size="11" text-anchor="middle" font-weight="bold">SSE (服务器推送)</text>
+
+    <!-- 中间层: 协议层 -->
+    <rect x="40" y="145" width="960" height="110" rx="10" fill="#0d1b2a" stroke="#6a1b9a" stroke-width="2"/>
+    <text x="520" y="167" fill="#ce93d8" font-size="13" text-anchor="middle" font-weight="bold">📜 Protocol Layer — 协议层 (JSON-RPC 2.0)</text>
+    <text x="520" y="187" fill="#90a4ae" font-size="12" text-anchor="middle">定义消息格式和通信规则，不管用什么传输方式</text>
+
+    <rect x="80" y="198" width="140" height="38" rx="8" fill="#4a148c" opacity="0.8"/>
+    <text x="150" y="215" fill="#fff" font-size="11" text-anchor="middle" font-weight="bold">initialize</text>
+    <text x="150" y="230" fill="#e1bee7" font-size="9" text-anchor="middle">握手协商</text>
+
+    <rect x="240" y="198" width="140" height="38" rx="8" fill="#4a148c" opacity="0.8"/>
+    <text x="310" y="215" fill="#fff" font-size="11" text-anchor="middle" font-weight="bold">tools/call</text>
+    <text x="310" y="230" fill="#e1bee7" font-size="9" text-anchor="middle">调用工具</text>
+
+    <rect x="400" y="198" width="140" height="38" rx="8" fill="#4a148c" opacity="0.8"/>
+    <text x="470" y="215" fill="#fff" font-size="11" text-anchor="middle" font-weight="bold">resources/read</text>
+    <text x="470" y="230" fill="#e1bee7" font-size="9" text-anchor="middle">读取资源</text>
+
+    <rect x="560" y="198" width="140" height="38" rx="8" fill="#4a148c" opacity="0.8"/>
+    <text x="630" y="215" fill="#fff" font-size="11" text-anchor="middle" font-weight="bold">prompts/get</text>
+    <text x="630" y="230" fill="#e1bee7" font-size="9" text-anchor="middle">获取模板</text>
+
+    <rect x="720" y="198" width="140" height="38" rx="8" fill="#4a148c" opacity="0.8"/>
+    <text x="790" y="215" fill="#fff" font-size="11" text-anchor="middle" font-weight="bold">ping / health</text>
+    <text x="790" y="230" fill="#e1bee7" font-size="9" text-anchor="middle">心跳检测</text>
+
+    <!-- 向上箭头 -->
+    <line x1="520" y1="145" x2="520" y2="255" stroke="#b388ff" stroke-width="2" stroke-dasharray="4,4"/>
+    <polygon points="516,251 524,251 520,259" fill="#b388ff"/>
+    <text x="530" y="205" fill="#b388ff" font-size="10">消息封装</text>
+
+    <!-- 上层: Client 区域 -->
+    <rect x="40" y="255" width="480" height="420" rx="10" fill="url(#clientGrad)" stroke="#1565c0" stroke-width="2"/>
+    <text x="280" y="283" fill="#64b5f6" font-size="14" text-anchor="middle" font-weight="bold">🤖 MCP Client 端</text>
+
+    <rect x="60" y="295" width="440" height="360" rx="8" fill="#0d1b2a" stroke="#1565c0" stroke-width="1"/>
+    <text x="280" y="317" fill="#90caf9" font-size="12" text-anchor="middle" font-weight="bold">├── 连接管理器 (Connection Manager)</text>
+    <text x="280" y="337" fill="#78909c" font-size="11" text-anchor="middle">管理 TCP/stdio 连接生命周期，断线自动重连</text>
+    <text x="280" y="363" fill="#90caf9" font-size="12" text-anchor="middle">├── 消息序列化器 (Serializer)</text>
+    <text x="280" y="383" fill="#78909c" font-size="11" text-anchor="middle">JSON-RPC 编码/解码，把数据变成标准格式</text>
+    <text x="280" y="409" fill="#90caf9" font-size="12" text-anchor="middle">├── 工具调用引擎 (Tool Invoker)</text>
+    <text x="280" y="429" fill="#78909c" font-size="11" text-anchor="middle">LLM 决定调用哪个工具 → 构建请求 → 发送</text>
+    <text x="280" y="455" fill="#90caf9" font-size="12" text-anchor="middle">├── 结果处理器 (Result Handler)</text>
+    <text x="280" y="475" fill="#78909c" font-size="11" text-anchor="middle">解析响应 → 格式化 → 喂给 LLM 继续推理</text>
+    <text x="280" y="501" fill="#90caf9" font-size="12" text-anchor="middle">├── 重试 & 超时管理</text>
+    <text x="280" y="521" fill="#78909c" font-size="11" text-anchor="middle">网络抖动自动重试，防止无限等待</text>
+    <text x="280" y="547" fill="#90caf9" font-size="12" text-anchor="middle">└── 能力协商器 (Capability Negotiator)</text>
+    <text x="280" y="567" fill="#78909c" font-size="11" text-anchor="middle">握手时交换支持的协议版本和功能集</text>
+
+    <!-- 上层: Server 区域 -->
+    <rect x="520" y="255" width="480" height="420" rx="10" fill="url(#serverGrad)" stroke="#c62828" stroke-width="2"/>
+    <text x="760" y="283" fill="#ef9a9a" font-size="14" text-anchor="middle" font-weight="bold">🛠️ MCP Server 端</text>
+
+    <rect x="540" y="295" width="440" height="360" rx="8" fill="#0d1b2a" stroke="#c62828" stroke-width="1"/>
+    <text x="760" y="317" fill="#ef9a9a" font-size="12" text-anchor="middle" font-weight="bold">├── 工具注册表 (Tool Registry)</text>
+    <text x="760" y="337" fill="#b0bec5" font-size="11" text-anchor="middle">注册所有可用工具及其参数描述和类型</text>
+    <text x="760" y="363" fill="#ef9a9a" font-size="12" text-anchor="middle">├── 资源管理器 (Resource Manager)</text>
+    <text x="760" y="383" fill="#b0bec5" font-size="11" text-anchor="middle">管理 URI 映射、数据源和缓存策略</text>
+    <text x="760" y="409" fill="#ef9a9a" font-size="12" text-anchor="middle">├── 提示词模板库 (Prompt Store)</text>
+    <text x="760" y="429" fill="#b0bec5" font-size="11" text-anchor="middle">预定义的对话模板，支持参数注入</text>
+    <text x="760" y="455" fill="#ef9a9a" font-size="12" text-anchor="middle">├── 执行引擎 (Executor)</text>
+    <text x="760" y="475" fill="#b0bec5" font-size="11" text-anchor="middle">真正执行工具逻辑，调用系统 API</text>
+    <text x="760" y="501" fill="#ef9a9a" font-size="12" text-anchor="middle">├── 安全沙箱 (Security Sandbox)</text>
+    <text x="760" y="521" fill="#b0bec5" font-size="11" text-anchor="middle">权限控制 / 速率限制 / 输入校验</text>
+    <text x="760" y="547" fill="#ef9a9a" font-size="12" text-anchor="middle">└── 错误处理器 (Error Handler)</text>
+    <text x="760" y="567" fill="#b0bec5" font-size="11" text-anchor="middle">捕获异常 → 转换为标准错误响应</text>
+
+    <!-- 中间通信区 -->
+    <rect x="480" y="400" width="80" height="100" rx="10" fill="#16213e" stroke="#ffd54f" stroke-width="1.5"/>
+    <text x="520" y="425" fill="#ffd54f" font-size="11" text-anchor="middle" font-weight="bold">通信</text>
+    <text x="520" y="443" fill="#ffd54f" font-size="11" text-anchor="middle" font-weight="bold">通道</text>
+    <text x="520" y="470" fill="#90a4ae" font-size="10" text-anchor="middle">JSON-RPC</text>
+    <text x="520" y="488" fill="#90a4ae" font-size="10" text-anchor="middle">Messages</text>
+</svg>
+</section>
+
+<!-- ==================== Section 6: 消息格式 ==================== -->
+<section>
+<h2>六、一条消息长什么样？（JSON-RPC 格式）</h2>
+<div class="advice-box">
+<b>📨 生活类比：</b>MCP 消息就像一封快递单。不管内容是文件还是搜索结果，信封格式永远一样：<b>谁发的 → 给谁的 → 是什么类型 → 内容是什么</b>
+</div>
+<svg width="1040" height="360" viewBox="0 0 1040 360">
+    <!-- 信封外壳 -->
+    <rect x="100" y="30" width="840" height="280" rx="12" fill="#0d1b2a" stroke="#ffd54f" stroke-width="2"/>
+    <text x="520" y="58" fill="#ffd54f" font-size="14" text-anchor="middle" font-weight="bold">📦 MCP 消息信封 (JSON-RPC 2.0)</text>
+
+    <!-- 各字段 -->
+    <rect x="140" y="75" width="160" height="30" rx="6" fill="#4a148c" opacity="0.8"/>
+    <text x="220" y="95" fill="#e1bee7" font-size="12" text-anchor="middle" font-weight="bold">"jsonrpc": "2.0"</text>
+    <text x="520" y="95" fill="#90a4ae" font-size="12">← 协议版本 (永远是 2.0)</text>
+
+    <rect x="140" y="115" width="160" height="30" rx="6" fill="#1565c0" opacity="0.8"/>
+    <text x="220" y="135" fill="#90caf9" font-size="12" text-anchor="middle" font-weight="bold">"method": "tools/call"</text>
+    <text x="520" y="135" fill="#90a4ae" font-size="12">← 操作类型 (要干什么)</text>
+
+    <rect x="140" y="155" width="160" height="30" rx="6" fill="#2e7d32" opacity="0.8"/>
+    <text x="220" y="175" fill="#a5d6a7" font-size="12" text-anchor="middle" font-weight="bold">"params": {...}</text>
+    <text x="520" y="175" fill="#90a4ae" font-size="12">← 参数 (具体数据)</text>
+
+    <rect x="140" y="195" width="160" height="30" rx="6" fill="#c62828" opacity="0.8"/>
+    <text x="220" y="215" fill="#ef9a9a" font-size="12" text-anchor="middle" font-weight="bold">"id": 1</text>
+    <text x="520" y="215" fill="#90a4ae" font-size="12">← 请求编号 (配对用)</text>
+
+    <!-- 右侧: 实际 JSON 示例 -->
+    <rect x="700" y="75" width="280" height="150" rx="8" fill="#16213e" stroke="#80cbc4" stroke-width="1"/>
+    <text x="840" y="95" fill="#80cbc4" font-size="12" text-anchor="middle" font-weight="bold">实际 JSON 示例</text>
+    <text x="715" y="118" fill="#e0e0e0" font-size="11">{</text>
+    <text x="730" y="136" fill="#80cbc4" font-size="11">  "jsonrpc": "2.0",</text>
+    <text x="730" y="154" fill="#80cbc4" font-size="11">  "method": "tools/call",</text>
+    <text x="730" y="172" fill="#80cbc4" font-size="11">  "params": {</text>
+    <text x="745" y="190" fill="#ffd54f" font-size="11">    "name": "read_file"</text>
+    <text x="745" y="208" fill="#ffd54f" font-size="11">    "path": "/etc/hosts"</text>
+    <text x="730" y="226" fill="#80cbc4" font-size="11">  },</text>
+    <text x="730" y="244" fill="#80cbc4" font-size="11">  "id": 42</text>
+    <text x="715" y="262" fill="#e0e0e0" font-size="11">}</text>
+
+    <!-- 底部说明 -->
+    <rect x="140" y="280" width="740" height="24" rx="6" fill="#16213e"/>
+    <text x="510" y="296" fill="#90a4ae" font-size="11" text-anchor="middle">注意: 响应消息格式相同，只是没有 "method" 字段，而是有 "result" 或 "error" 字段</text>
+</svg>
+</section>
+
+<!-- ==================== Section 7: 对比总结 ==================== -->
+<section>
+<h2>七、MCP vs 其他协议（为什么需要 MCP？）</h2>
+<table>
+<tr><th>特性</th><th>MCP</th><th>REST API</th><th>gRPC</th><th>WebSocket</th></tr>
+<tr>
+    <td><b>定位</b></td>
+    <td style="color:#ffd54f;"><b>AI 工具的标准接口</b></td>
+    <td>通用 HTTP 接口</td>
+    <td>高性能 RPC</td>
+    <td>实时双向通信</td>
+</tr>
+<tr>
+    <td><b>谁在用</b></td>
+    <td>Claude, ChatGPT, 本地 LLM</td>
+    <td>几乎所有 Web 服务</td>
+    <td>微服务之间</td>
+    <td>聊天室, 直播弹幕</td>
+</tr>
+<tr>
+    <td><b>工具发现</b></td>
+    <td>✅ 自动发现 (tools/list)</td>
+    <td>❌ 需要手动查文档</td>
+    <td>❌ 需要 Proto 定义</td>
+    <td>❌ 不适用</td>
+</tr>
+<tr>
+    <td><b>AI 原生</b></td>
+    <td>✅ 专为 LLM 设计</td>
+    <td>❌ 通用协议</td>
+    <td>❌ 通用协议</td>
+    <td>❌ 通用协议</td>
+</tr>
+<tr>
+    <td><b>上手难度</b></td>
+    <td>⭐ 低 (即插即用)</td>
+    <td>⭐⭐ 中</td>
+    <td>⭐⭐⭐ 高</td>
+    <td>⭐⭐⭐ 高</td>
+</tr>
+<tr>
+    <td><b>一句话总结</b></td>
+    <td><b>"AI 的 USB 接口"</b></td>
+    <td>"互联网的 HTTP"</td>
+    <td>"微服务的 gRPC"</td>
+    <td>"实时流的 WebSocket"</td>
+</tr>
+</table>
+
+<div class="tip" style="margin-top:20px;">
+    💡 <b>核心价值：</b>MCP 让 AI 模型不再"孤岛"。以前每接入一个新工具都要写专用代码，现在只要实现 MCP Server，任何支持 MCP 的 AI 都能立即使用你的工具。这就是 <b>"一次实现，处处可用"</b>。
+</div>
+</section>
+
+<!-- ==================== Section 8: 快速入门 ==================== -->
+<section>
+<h2>八、5 分钟理解：写一个最简单的 MCP Server</h2>
+<div class="advice-box">
+<b>🎯 目标：</b>写一个 MCP Server，提供一个"打招呼"工具。AI 调用它时，它返回"你好！今天是星期X"。
+</div>
+
+<svg width="1040" height="220" viewBox="0 0 1040 220">
+    <!-- 左边: 代码 -->
+    <rect x="20" y="20" width="500" height="180" rx="10" fill="#0d1b2a" stroke="#80cbc4" stroke-width="2"/>
+    <text x="270" y="45" fill="#80cbc4" font-size="14" text-anchor="middle" font-weight="bold">Python 代码 (约 20 行)</text>
+    <text x="35" y="72" fill="#ff7043" font-size="11">from mcp import Server</text>
+    <text x="35" y="92" fill="#80cbc4" font-size="11">@server.tool("greet")</text>
+    <text x="35" y="112" fill="#e0e0e0" font-size="11">async def greet(name):</text>
+    <text x="55" y="132" fill="#e0e0e0" font-size="11">return f"你好, {name}!"</text>
+    <text x="35" y="158" fill="#ff7043" font-size="11">server.run()</text>
+
+    <!-- 箭头 -->
+    <line x1="520" y1="100" x2="560" y2="100" stroke="#ffd54f" stroke-width="3"/>
+    <polygon points="556,94 566,100 556,106" fill="#ffd54f"/>
+    <text x="540" y="90" fill="#ffd54f" font-size="10" text-anchor="middle">运行</text>
+
+    <!-- 右边: 运行效果 -->
+    <rect x="560" y="20" width="460" height="180" rx="10" fill="#0d1b2a" stroke="#ffd54f" stroke-width="2"/>
+    <text x="790" y="45" fill="#ffd54f" font-size="14" text-anchor="middle" font-weight="bold">运行后对外提供的能力</text>
+
+    <rect x="580" y="60" width="420" height="40" rx="8" fill="#16213e" stroke="#2e7d32" stroke-width="1"/>
+    <text x="790" y="85" fill="#81c784" font-size="12" text-anchor="middle">🔧 工具: greet(name: string) → "你好, {name}!"</text>
+
+    <rect x="580" y="108" width="420" height="40" rx="8" fill="#16213e" stroke="#2e7d32" stroke-width="1"/>
+    <text x="790" y="133" fill="#81c784" font-size="12" text-anchor="middle">📋 描述: "向用户发送个性化问候语"</text>
+
+    <rect x="580" y="156" width="420" height="30" rx="6" fill="#2e7d32" opacity="0.5"/>
+    <text x="790" y="176" fill="#a5d6a7" font-size="11" text-anchor="middle">✅ 任何支持 MCP 的 AI 客户端都可以立即调用!</text>
+</svg>
+</section>
+
+<!-- ==================== Footer ==================== -->
+<section>
+<h2>九、速查卡</h2>
+<table>
+<tr><th>问题</th><th>答案</th></tr>
+<tr><td>MCP 是什么？</td><td>AI 模型和外部工具之间的<b>统一标准接口</b></td></tr>
+<tr><td>谁发明的？</td><td><b>Anthropic</b> (Claude 的母公司)，2024 年发布</td></tr>
+<tr><td>为什么要用它？</td><td>避免每个 AI 工具都写专用集成代码，实现<b>"一次实现，处处可用"</b></td></tr>
+<tr><td>支持哪些语言？</td><td>官方 SDK: <b>Python, TypeScript</b>；社区: Go, Rust, Java...</td></tr>
+<tr><td>怎么学？</td><td>1) 装 SDK → 2) 写 Server → 3) 用 Claude Desktop 连接 → 4) 完事!</td></tr>
+<tr><td>生产能用吗？</td><td>✅ 已成熟，Claude Desktop、Cursor、Windsurf 等都原生支持</td></tr>
+</table>
+
+<div class="warn" style="margin-top:20px;">
+    ⚠️ <b>安全提醒：</b>MCP Server 拥有执行工具的能力，务必做好权限控制。不要信任不可信的 Server，就像不要随便安装来源不明的软件一样。
+</div>
+</section>
+
+</div>
+</body>
+</html>
