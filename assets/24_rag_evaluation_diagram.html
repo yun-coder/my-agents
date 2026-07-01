@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG 评估体系 · 全景架构图</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card-bg: #1a1d27;
+    --border: #2a2d3a;
+    --text: #e2e4ea;
+    --text-dim: #8b8fa3;
+    --accent-blue: #5b8def;
+    --accent-green: #4ecb71;
+    --accent-orange: #f0a04b;
+    --accent-purple: #a78bfa;
+    --accent-red: #f27373;
+    --accent-cyan: #45d0e0;
+    --accent-pink: #f080c0;
+    --gradient-1: linear-gradient(135deg, #5b8def, #a78bfa);
+    --gradient-2: linear-gradient(135deg, #4ecb71, #45d0e0);
+    --gradient-3: linear-gradient(135deg, #f0a04b, #f27373);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 24px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 28px;
+    font-weight: 700;
+    padding: 20px 0 8px;
+    background: var(--gradient-1);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-bottom: 32px;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+  .full { grid-column: 1 / -1; }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .card.blue::before { background: var(--gradient-1); }
+  .card.green::before { background: var(--gradient-2); }
+  .card.orange::before { background: var(--gradient-3); }
+  .card-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-title .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .dot-blue { background: var(--accent-blue); }
+  .dot-green { background: var(--accent-green); }
+  .dot-orange { background: var(--accent-orange); }
+  .dot-purple { background: var(--accent-purple); }
+  .dot-red { background: var(--accent-red); }
+  .dot-cyan { background: var(--accent-cyan); }
+  .dot-pink { background: var(--accent-pink); }
+
+  /* ===== 评估体系分层 ===== */
+  .split-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .split-col h3 {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .flow-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .flow-item .icon { font-size: 14px; }
+  .arrow-down {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 16px;
+    margin: 4px 0;
+  }
+
+  /* ===== 四大指标 ===== */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .metric-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: border-color 0.2s;
+  }
+  .metric-card:hover { border-color: var(--accent-blue); }
+  .metric-name {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .metric-en {
+    font-size: 11px;
+    color: var(--text-dim);
+    font-style: italic;
+    margin-bottom: 8px;
+  }
+  .metric-flow {
+    font-size: 12px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+  .metric-flow .step {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .metric-flow .sep {
+    color: var(--accent-cyan);
+    margin: 0 2px;
+  }
+  .metric-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-top: 8px;
+    font-weight: 500;
+  }
+  .tag-blue { background: rgba(91,141,239,0.15); color: var(--accent-blue); }
+  .tag-green { background: rgba(78,203,113,0.15); color: var(--accent-green); }
+  .tag-orange { background: rgba(240,160,75,0.15); color: var(--accent-orange); }
+  .tag-purple { background: rgba(167,139,250,0.15); color: var(--accent-purple); }
+
+  /* ===== 框架对比 ===== */
+  .framework-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .framework-table th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--border);
+    color: var(--text-dim);
+    font-weight: 500;
+    font-size: 12px;
+  }
+  .framework-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: top;
+  }
+  .fw-name {
+    font-weight: 600;
+    font-size: 14px;
+  }
+  .fw-tag {
+    display: inline-block;
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+
+  /* ===== 生命周期 ===== */
+  .pipeline-steps {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+  .pipeline-step {
+    flex: 1;
+    text-align: center;
+    padding: 12px 8px;
+    position: relative;
+  }
+  .pipeline-step .step-icon {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .pipeline-step .step-label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .pipeline-step .step-detail {
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .pipeline-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--text-dim);
+    font-size: 18px;
+    padding: 0 4px;
+  }
+
+  /* ===== 指标矩阵 ===== */
+  .matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  .matrix-table th {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 2px solid var(--border);
+    color: var(--text-dim);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .matrix-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .matrix-table td:first-child {
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .metric-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .mt {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* ===== 陷阱 ===== */
+  .trap-list {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .trap-item {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.02);
+    border-radius: 6px;
+    font-size: 12px;
+    align-items: center;
+  }
+  .trap-item:nth-child(even) { background: rgba(255,255,255,0.04); }
+  .trap-header {
+    font-weight: 600;
+    color: var(--accent-red);
+  }
+  .consequence { color: var(--accent-orange); }
+  .countermeasure { color: var(--accent-green); }
+
+  /* ===== 技术关系 ===== */
+  .relation-diagram {
+    text-align: center;
+    padding: 10px 0;
+  }
+  .relation-center {
+    display: inline-block;
+    padding: 12px 28px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 15px;
+    border: 2px solid var(--accent-blue);
+    background: rgba(91,141,239,0.1);
+    margin-bottom: 16px;
+  }
+  .relation-arrows {
+    color: var(--text-dim);
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  .relation-bottom {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+  }
+  .relation-node {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    text-align: center;
+    min-width: 120px;
+  }
+  .relation-node .rn-title { font-weight: 600; margin-bottom: 2px; }
+  .relation-node .rn-desc { color: var(--text-dim); font-size: 11px; }
+
+  /* ===== API Key ===== */
+  .api-deps {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .api-col h4 {
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .api-col ul {
+    list-style: none;
+    padding: 0;
+  }
+  .api-col li {
+    font-size: 12px;
+    padding: 4px 0 4px 16px;
+    position: relative;
+    color: var(--text-dim);
+  }
+  .api-col li::before {
+    content: '•';
+    position: absolute;
+    left: 4px;
+    color: var(--accent-cyan);
+  }
+  .api-note {
+    grid-column: 1 / -1;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: rgba(240,160,75,0.08);
+    border: 1px solid rgba(240,160,75,0.2);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--accent-orange);
+  }
+
+  /* ===== 验收清单 ===== */
+  .checklist {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 20px;
+  }
+  .check-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    padding: 5px 0;
+  }
+  .check-box {
+    width: 16px; height: 16px;
+    border: 2px solid var(--accent-green);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--accent-green);
+  }
+  .check-text { color: var(--text); }
+
+  /* ===== Footer ===== */
+  .footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 11px;
+    margin-top: 28px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+  .footer a { color: var(--accent-blue); text-decoration: none; }
+  .footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<h1>RAG 评估体系 · 全景架构图</h1>
+<p class="subtitle">来源: agent_platform/theory/phase02_production/24_rag_evaluation.md &nbsp;|&nbsp; 涵盖离线评估、在线评估、RAGAS、DeepEval、LLM-as-Judge 三大框架</p>
+
+<div class="grid">
+
+  <!-- ===== 1. 评估体系分层 ===== -->
+  <div class="card blue full">
+    <div class="card-title"><span class="dot dot-blue"></span>评估体系分层 — 离线评估 vs 在线评估</div>
+    <div class="split-view">
+      <div class="split-col">
+        <h3><span class="dot dot-blue"></span>离线评估 (Development)</h3>
+        <div class="flow-item"><span class="icon">📋</span> 基准数据集 Ground Truth</div>
+        <div class="flow-item"><span class="icon">🧪</span> RAGAS / DeepEval 自动评估</div>
+        <div class="flow-item"><span class="icon">⚖️</span> LLM-as-Judge 裁判评估</div>
+        <div class="flow-item"><span class="icon">📊</span> 多维指标量化分析</div>
+        <div class="flow-item"><span class="icon">🔄</span> CI/CD 质量门禁</div>
+        <div class="arrow-down">▼</div>
+        <div class="flow-item" style="color:var(--accent-green)">✦ 快速迭代，开发阶段核心手段</div>
+      </div>
+      <div class="split-col">
+        <h3><span class="dot dot-green"></span>在线评估 (Production)</h3>
+        <div class="flow-item"><span class="icon">👍</span> 用户点赞/踩反馈</div>
+        <div class="flow-item"><span class="icon">📈</span> A/B 测试变体对比</div>
+        <div class="flow-item"><span class="icon">⏱️</span> 延迟 & Token 消耗监控</div>
+        <div class="flow-item"><span class="icon">💬</span> 追问率 / 会话完成率</div>
+        <div class="flow-item"><span class="icon">🚨</span> 告警阈值触发</div>
+        <div class="arrow-down">▼</div>
+        <div class="flow-item" style="color:var(--accent-orange)">✦ 持续监控，发现离线评估盲区</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. RAGAS 四大指标 ===== -->
+  <div class="card green">
+    <div class="card-title"><span class="dot dot-green"></span>RAGAS 四大核心指标 · 计算流程</div>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-name">Faithfulness</div>
+        <div class="metric-en">忠实度</div>
+        <div class="metric-flow">
+          <span class="step">答案<span class="sep">→</span>拆分为声明(Claims)</span><br>
+          <span class="step">逐条验证<span class="sep">→</span>上下文支持?</span><br>
+          <span class="step">支持数 / 总数 = 分数</span>
+        </div>
+        <span class="metric-tag tag-blue">反映幻觉程度</span>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">Answer Relevancy</div>
+        <div class="metric-en">答案相关性</div>
+        <div class="metric-flow">
+          <span class="step">问题+答案<span class="sep">→</span>反向生成问题</span><br>
+          <span class="step">生成问题 vs 原问题</span><br>
+          <span class="step">计算相似度 = 分数</span>
+        </div>
+        <span class="metric-tag tag-green">反映回答针对性</span>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">Context Precision</div>
+        <div class="metric-en">上下文精确度</div>
+        <div class="metric-flow">
+          <span class="step">检索文档[1..N] + 相关标签</span><br>
+          <span class="step">相关文档越靠前得分越高</span><br>
+          <span class="step">体现排序质量</span>
+        </div>
+        <span class="metric-tag tag-orange">反映召回排名合理性</span>
+      </div>
+      <div class="metric-card">
+        <div class="metric-name">Context Recall</div>
+        <div class="metric-en">上下文召回率</div>
+        <div class="metric-flow">
+          <span class="step">检索文档 + 标准答案</span><br>
+          <span class="step">标准答案信息被检索覆盖?</span><br>
+          <span class="step">覆盖比例 = 分数</span>
+        </div>
+        <span class="metric-tag tag-purple">反映信息遗漏风险</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 3. 三大框架对比 ===== -->
+  <div class="card orange">
+    <div class="card-title"><span class="dot dot-orange"></span>评估框架对比 · RAGAS / DeepEval / LLM-as-Judge</div>
+    <table class="framework-table">
+      <thead>
+        <tr>
+          <th>框架</th>
+          <th>特点</th>
+          <th>API Key</th>
+          <th>适用场景</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="fw-name" style="color:var(--accent-blue)">RAGAS</span><span class="fw-tag tag-blue">开源</span></td>
+          <td>四大核心指标，无需人工标注，自动计算</td>
+          <td>OPENAI_API_KEY</td>
+          <td>标准化离线评估首选</td>
+        </tr>
+        <tr>
+          <td><span class="fw-name" style="color:var(--accent-green)">DeepEval</span><span class="fw-tag tag-green">开源</span></td>
+          <td>支持 RAGAS 指标 + Hallucination + pytest 集成</td>
+          <td>OPENAI_API_KEY</td>
+          <td>需要多维度评估 + 测试框架集成</td>
+        </tr>
+        <tr>
+          <td><span class="fw-name" style="color:var(--accent-purple)">LLM-as-Judge</span><span class="fw-tag tag-purple">灵活</span></td>
+          <td>自定义提示词，任意 LLM 可作裁判</td>
+          <td>对应 LLM 的 Key</td>
+          <td>需要定制化评估维度</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== 4. 评估生命周期 ===== -->
+  <div class="card blue full">
+    <div class="card-title"><span class="dot dot-blue"></span>评估流水线 · 完整生命周期</div>
+    <div class="pipeline-steps">
+      <div class="pipeline-step">
+        <div class="step-icon" style="background:rgba(91,141,239,0.15);color:var(--accent-blue)">📋</div>
+        <div class="step-label">构建测试数据集</div>
+        <div class="step-detail">100-200+用例<br>人工标注 GT<br>生产日志采样<br>覆盖边界案例</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-icon" style="background:rgba(78,203,113,0.15);color:var(--accent-green)">⚙️</div>
+        <div class="step-label">运行评估</div>
+        <div class="step-detail">RAGAS 指标<br>DeepEval 指标<br>LLM-as-Judge<br>延迟/Token 统计</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-icon" style="background:rgba(240,160,75,0.15);color:var(--accent-orange)">📊</div>
+        <div class="step-label">生成报告</div>
+        <div class="step-detail">JSON 报告<br>可视化图表<br>趋势追踪<br>阈值告警</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="step-icon" style="background:rgba(167,139,250,0.15);color:var(--accent-purple)">🔁</div>
+        <div class="step-label">版本对比 & CI/CD</div>
+        <div class="step-detail">回归检测<br>质量门禁<br>版本追溯<br>持续改进</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 5. 指标矩阵 ===== -->
+  <div class="card green full">
+    <div class="card-title"><span class="dot dot-green"></span>指标矩阵 · 多维度全面覆盖</div>
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th style="width:100px">评估维度</th>
+          <th>具体指标</th>
+          <th style="width:200px">说明</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="dot dot-blue" style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle"></span>检索质量</td>
+          <td><div class="metric-tags"><span class="mt">Hit Rate</span><span class="mt">MRR</span><span class="mt">NDCG</span></div></td>
+          <td style="color:var(--text-dim);font-size:12px">命中/倒数排名/排序增益，无需 API Key</td>
+        </tr>
+        <tr>
+          <td><span class="dot dot-green" style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle"></span>生成质量</td>
+          <td><div class="metric-tags"><span class="mt">BLEU</span><span class="mt">ROUGE-L</span><span class="mt">BERTScore</span></div></td>
+          <td style="color:var(--text-dim);font-size:12px">n-gram 重合 / 最长公共子序列 / 语义相似度</td>
+        </tr>
+        <tr>
+          <td><span class="dot dot-orange" style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle"></span>RAGAS</td>
+          <td><div class="metric-tags"><span class="mt">Faithfulness</span><span class="mt">Relevancy</span><span class="mt">Context Precision</span><span class="mt">Context Recall</span></div></td>
+          <td style="color:var(--text-dim);font-size:12px">RAG 专属指标，需 LLM API Key</td>
+        </tr>
+        <tr>
+          <td><span class="dot dot-purple" style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle"></span>端到端</td>
+          <td><div class="metric-tags"><span class="mt">正确率</span><span class="mt">幻觉率</span><span class="mt">延迟(ms)</span><span class="mt">Token 消耗</span></div></td>
+          <td style="color:var(--text-dim);font-size:12px">人工标注 + 系统性能</td>
+        </tr>
+        <tr>
+          <td><span class="dot dot-red" style="display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:6px;vertical-align:middle"></span>用户体验</td>
+          <td><div class="metric-tags"><span class="mt">点赞率</span><span class="mt">追问率</span><span class="mt">会话完成率</span></div></td>
+          <td style="color:var(--text-dim);font-size:12px">在线实时反馈，发现离线盲区</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ===== 6. 常见陷阱 ===== -->
+  <div class="card orange full">
+    <div class="card-title"><span class="dot dot-orange"></span>六大常见陷阱与对策</div>
+    <div class="trap-list">
+      <div class="trap-item">
+        <span class="trap-header">评估数据泄露</span>
+        <span class="consequence">指标虚高，脱离真实水平</span>
+        <span class="countermeasure">✓ 测试集与检索库完全隔离</span>
+      </div>
+      <div class="trap-item">
+        <span class="trap-header">LLM-as-Judge 偏见</span>
+        <span class="consequence">评估不公，偏好自身风格</span>
+        <span class="countermeasure">✓ 多 LLM 取平均 + 人工抽检</span>
+      </div>
+      <div class="trap-item">
+        <span class="trap-header">单一指标决策</span>
+        <span class="consequence">Faithfulness 高但 Relevancy 低</span>
+        <span class="countermeasure">✓ 多维度交叉分析</span>
+      </div>
+      <div class="trap-item">
+        <span class="trap-header">忽略延迟/成本</span>
+        <span class="consequence">质量达标但生产不可用</span>
+        <span class="countermeasure">✓ 质量-延迟-成本三角权衡</span>
+      </div>
+      <div class="trap-item">
+        <span class="trap-header">测试集分布偏差</span>
+        <span class="consequence">评估失真，不反映真实场景</span>
+        <span class="countermeasure">✓ 从生产日志采样构建测试集</span>
+      </div>
+      <div class="trap-item">
+        <span class="trap-header">不跟踪版本</span>
+        <span class="consequence">无法回溯变更影响</span>
+        <span class="countermeasure">✓ 纳入 CI/CD 质量门禁</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 7. 技术关系 ===== -->
+  <div class="card blue full">
+    <div class="card-title"><span class="dot dot-blue"></span>技术关系 · RAG 评估在生态中的定位</div>
+    <div class="relation-diagram">
+      <div class="relation-center">🎯 RAG 评估体系 (本章)</div>
+      <div class="relation-arrows">↕ 评估结果与线上监控关联 · 指标与检索器/生成器直接对应</div>
+      <div class="relation-bottom">
+        <div class="relation-node">
+          <div class="rn-title" style="color:var(--accent-cyan)">📡 LLM 可观测性</div>
+          <div class="rn-desc">25章<br>关联评估结果<br>发现离线盲区</div>
+        </div>
+        <div class="relation-node">
+          <div class="rn-title" style="color:var(--accent-green)">🛡️ Guardrails</div>
+          <div class="rn-desc">26章<br>评估安全规则<br>保障输出合规</div>
+        </div>
+        <div class="relation-node">
+          <div class="rn-title" style="color:var(--accent-purple)">⚙️ RAG 核心管道</div>
+          <div class="rn-desc">检索器 / 重排器 / 生成器<br>指标直接对应各模块</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 8. API Key 依赖 ===== -->
+  <div class="card green">
+    <div class="card-title"><span class="dot dot-green"></span>API Key 依赖分布</div>
+    <div class="api-deps">
+      <div class="api-col">
+        <h4 style="color:var(--accent-red)">🔑 需要 API Key</h4>
+        <ul>
+          <li>RAGAS 框架 (Faithfulness/Relevancy/Precision/Recall)</li>
+          <li>DeepEval 框架 (LLM-as-Judge 评估)</li>
+          <li>LLM-as-Judge 自定义评估</li>
+        </ul>
+      </div>
+      <div class="api-col">
+        <h4 style="color:var(--accent-green)">🔓 不需要 API Key</h4>
+        <ul>
+          <li>检索指标 (Hit Rate / MRR / NDCG)</li>
+          <li>传统 NLP 指标 (BLEU / ROUGE)</li>
+        </ul>
+      </div>
+      <div class="api-note">💡 建议: 使用专用评估 API Key 并设置用量限制，避免生产环境误用</div>
+    </div>
+  </div>
+
+  <!-- ===== 9. 验收清单 ===== -->
+  <div class="card orange">
+    <div class="card-title"><span class="dot dot-orange"></span>验收清单 · 10 项达标标准</div>
+    <div class="checklist">
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">测试数据集 ≥ 100 用例，覆盖边界场景</span></div>
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">RAGAS 四项核心指标可运行</span></div>
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">DeepEval 框架集成完毕（备选方案）</span></div>
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">LLM-as-Judge 评估机制实现并校准</span></div>
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">离线评估流水线搭建完成</span></div>
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">评估结果版本化管理（JSON 报告 + 趋势追踪）</span></div>
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">在线评估机制（用户反馈采集）</span></div>
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">API Key 配置 + 用量限制</span></div>
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">评估阈值标准制定 (如 Faithfulness > 0.8)</span></div>
+      <div class="check-item"><span class="check-box">☐</span><span class="check-text">评估纳入 CI/CD 流水线</span></div>
+    </div>
+  </div>
+
+</div><!-- end grid -->
+
+<div class="footer">
+  <p>agent-platform · RAG Evaluation Knowledge Map &nbsp;|&nbsp; 原文档: <a href="24_rag_evaluation.md">24_rag_evaluation.md</a></p>
+  <p style="margin-top:4px">关联: <a href="23_reranker.md">23_Reranker</a> · <a href="25_observability.md">25_Observability</a> · <a href="26_guardrails.md">26_Guardrails</a></p>
+</div>
+
+</body>
+</html>
