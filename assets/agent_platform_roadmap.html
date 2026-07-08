@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Agent 技术栈 — 完整技术路线图</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --border: #334155;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent1: #38bdf8;  /* 阶段一 蓝 */
+    --accent2: #a78bfa;  /* 阶段二 紫 */
+    --accent3: #34d399;  /* 阶段三 绿 */
+    --accent4: #fb923c;  /* 阶段四 橙 */
+    --link: #60a5fa;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; }
+
+  /* ── Header ── */
+  header {
+    text-align:center; padding:48px 24px 32px;
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom:1px solid var(--border);
+  }
+  header h1 { font-size:2.2rem; font-weight:700; letter-spacing:-0.5px; }
+  header h1 span.ph1 { color:var(--accent1); }
+  header h1 span.ph2 { color:var(--accent2); }
+  header h1 span.ph3 { color:var(--accent3); }
+  header h1 span.ph4 { color:var(--accent4); }
+  header p { color:var(--muted); margin-top:8px; font-size:0.96rem; }
+
+  /* ── Legend ── */
+  .legend {
+    display:flex; justify-content:center; gap:24px; flex-wrap:wrap;
+    padding:16px 24px; background:#1a2539; border-bottom:1px solid var(--border);
+    font-size:0.85rem;
+  }
+  .legend-item { display:flex; align-items:center; gap:6px; }
+  .legend-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .legend .badge { font-size:0.7rem; padding:1px 7px; border-radius:4px; background:var(--card); color:var(--muted); }
+
+  /* ── Stats bar ── */
+  .stats {
+    display:flex; justify-content:center; gap:32px; flex-wrap:wrap;
+    padding:14px 24px; background:#1a2539; border-bottom:1px solid var(--border);
+    font-size:0.88rem; color:var(--muted);
+  }
+  .stats strong { color:var(--text); }
+
+  /* ── Filter bar ── */
+  .filter-bar {
+    display:flex; justify-content:center; gap:8px; flex-wrap:wrap;
+    padding:14px 24px; background:#1a2539; border-bottom:1px solid var(--border);
+  }
+  .filter-bar button {
+    padding:5px 14px; border:1px solid var(--border); border-radius:20px;
+    background:transparent; color:var(--muted); cursor:pointer;
+    font-size:0.82rem; transition:.2s;
+  }
+  .filter-bar button:hover { border-color:var(--link); color:var(--link); }
+  .filter-bar button.active { background:var(--link); color:#0f172a; border-color:var(--link); font-weight:600; }
+
+  /* ── Phase section ── */
+  .phase {
+    max-width:1280px; margin:32px auto; padding:0 20px;
+  }
+  .phase-header {
+    display:flex; align-items:center; gap:16px; margin-bottom:18px;
+    cursor:pointer; user-select:none;
+  }
+  .phase-header h2 { font-size:1.35rem; font-weight:600; }
+  .phase-header .phase-num {
+    width:36px; height:36px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:1rem; flex-shrink:0;
+  }
+  .phase-header .phase-tag {
+    font-size:0.75rem; padding:2px 10px; border-radius:10px;
+    background:var(--card); color:var(--muted);
+  }
+  .phase-header .toggle-icon { color:var(--muted); font-size:1.2rem; transition:.25s; }
+  .phase-header .toggle-icon.open { transform:rotate(180deg); }
+
+  /* ── Topic grid ── */
+  .topic-grid {
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(290px,1fr));
+    gap:14px; margin-bottom:24px;
+  }
+  .topic-grid.hidden { display:none; }
+
+  /* ── Topic card ── */
+  .topic {
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    padding:16px; transition:.25s; position:relative;
+    cursor:default;
+  }
+  .topic:hover { border-color:var(--link); transform:translateY(-2px); box-shadow:0 6px 24px rgba(0,0,0,.3); }
+  .topic .num {
+    display:inline-flex; align-items:center; justify-content:center;
+    width:28px; height:28px; border-radius:8px;
+    font-size:0.78rem; font-weight:700; margin-bottom:6px;
+  }
+  .topic .title { font-size:0.95rem; font-weight:600; margin-bottom:6px; line-height:1.4; }
+  .topic .concept { font-size:0.8rem; color:var(--muted); line-height:1.55; margin-bottom:8px; }
+  .topic .techs { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:6px; }
+  .topic .techs span {
+    font-size:0.68rem; padding:1px 7px; border-radius:4px;
+    background:rgba(255,255,255,.06); color:var(--muted);
+  }
+  .topic .relations { display:flex; flex-wrap:wrap; gap:3px; }
+  .topic .relations a {
+    font-size:0.68rem; text-decoration:none; padding:0 5px;
+    border-radius:3px; transition:.2s;
+  }
+  .topic .relations a:hover { filter:brightness(1.3); }
+
+  /* ── External links section ── */
+  .ext-links {
+    max-width:1280px; margin:40px auto; padding:0 20px;
+  }
+  .ext-links h3 {
+    font-size:1rem; margin-bottom:14px; color:var(--muted);
+  }
+  .links-grid {
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(220px,1fr));
+    gap:10px;
+  }
+  .links-grid a {
+    display:flex; align-items:center; gap:8px;
+    padding:10px 14px; background:var(--card); border:1px solid var(--border);
+    border-radius:10px; text-decoration:none; color:var(--text);
+    font-size:0.84rem; transition:.2s;
+  }
+  .links-grid a:hover { border-color:var(--link); color:var(--link); }
+  .links-grid a .cat {
+    font-size:0.65rem; padding:1px 6px; border-radius:4px;
+    background:rgba(255,255,255,.07); color:var(--muted); flex-shrink:0;
+  }
+
+  /* ── Footer ── */
+  footer {
+    text-align:center; padding:28px; color:var(--muted); font-size:0.78rem;
+    border-top:1px solid var(--border); margin-top:40px;
+  }
+
+  /* ── Responsive ── */
+  @media(max-width:640px) {
+    header h1 { font-size:1.5rem; }
+    .topic-grid { grid-template-columns:1fr; }
+    .legend { gap:10px; }
+    .stats { gap:12px; flex-direction:column; align-items:center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>
+    <span class="ph1">AI</span> <span class="ph2">Agent</span>
+    <span class="ph3">技术栈</span> <span class="ph4">全景路线图</span>
+  </h1>
+  <p><span class="ph1">41</span> 个专题 · <span class="ph2">4</span> 个阶段 · 从基础闭环到前沿探索 · 理论 + 代码 + 资源全覆盖</p>
+</header>
+
+<div class="legend">
+  <span class="legend-item"><span class="legend-dot" style="background:var(--accent1)"></span> 阶段一：基础闭环</span>
+  <span class="legend-item"><span class="legend-dot" style="background:var(--accent2)"></span> 阶段二：Agent编排与生产化</span>
+  <span class="legend-item"><span class="legend-dot" style="background:var(--accent3)"></span> 阶段三：平台化与高级工程</span>
+  <span class="legend-item"><span class="legend-dot" style="background:var(--accent4)"></span> 阶段四：前沿探索</span>
+  <span class="legend-item"><span class="badge">🔑 LLM</span> 需 API Key</span>
+  <span class="legend-item"><span class="badge">🔓 本地</span> 免费/本地</span>
+</div>
+
+<div class="stats">
+  <span>📚 <strong>41</strong> 篇理论文档</span>
+  <span>📂 <strong>6</strong> 个综合项目</span>
+  <span>⏱ <strong>44</strong> 周学习路线</span>
+  <span id="stat-total">🔗 交叉引用待计算</span>
+</div>
+
+<div class="filter-bar" id="filterBar">
+  <button class="active" data-filter="all">全部</button>
+  <button data-filter="phase1">阶段一</button>
+  <button data-filter="phase2">阶段二</button>
+  <button data-filter="phase3">阶段三</button>
+  <button data-filter="phase4">阶段四</button>
+  <button data-filter="key">🔑 需 API Key</button>
+  <button data-filter="free">🔓 免费/本地</button>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- PHASE 1                                                         -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="phase" data-phase="1">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <div class="phase-num" style="background:var(--accent1);color:#0f172a;">1</div>
+    <h2 style="color:var(--accent1);">基础闭环</h2>
+    <span class="phase-tag">第 1-12 周 · 16 专题</span>
+    <span class="phase-tag">LLM + RAG + Tool Calling + API</span>
+    <span class="toggle-icon open">▼</span>
+  </div>
+  <div class="topic-grid" data-phase="1">
+
+    <!-- 01 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">01</div>
+      <div class="title">Prompt Engineering 提示词工程</div>
+      <div class="concept">设计和优化输入到 LLM 的提示以引导期望输出的系统方法，所有 AI Agent 应用的基石。</div>
+      <div class="techs"><span>System Prompt</span><span>Few-shot</span><span>CoT</span><span>ReAct</span><span>Agent Prompt</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/02_structured_outputs.md" style="color:var(--accent1)">→ 02 结构化输出</a>
+        <a href="../agent_platform/theory/phase01_foundation/05_function_calling.md" style="color:var(--accent1)">→ 05 Function Calling</a>
+      </div>
+    </div>
+
+    <!-- 02 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">02</div>
+      <div class="title">结构化输出 Structured Outputs</div>
+      <div class="concept">强制 LLM 生成符合预定义 Schema 的数据，将自然语言转化为程序可直接消费的强类型数据结构。</div>
+      <div class="techs"><span>JSON Schema</span><span>Pydantic</span><span>Response Format</span><span>工具调用参数</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/03_openai_api.md" style="color:var(--accent1)">→ 03 OpenAI API</a>
+        <a href="../agent_platform/theory/phase01_foundation/04_anthropic_claude_api.md" style="color:var(--accent1)">→ 04 Claude API</a>
+      </div>
+    </div>
+
+    <!-- 03 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">03</div>
+      <div class="title">OpenAI API 深入解析</div>
+      <div class="concept">OpenAI 的 RESTful 接口集合，包括 Chat Completions、Responses、Assistants API，是当前最成熟的 LLM API 生态。</div>
+      <div class="techs"><span>Chat Completions</span><span>Responses API</span><span>Assistants</span><span>Streaming</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/04_anthropic_claude_api.md" style="color:var(--accent1)">→ 04 Claude API</a>
+        <a href="../agent_platform/theory/phase01_foundation/05_function_calling.md" style="color:var(--accent1)">→ 05 Function Calling</a>
+      </div>
+    </div>
+
+    <!-- 04 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">04</div>
+      <div class="title">Anthropic Claude API</div>
+      <div class="concept">Claude 系列模型 API，以安全性和长上下文著称，提供 Extended Thinking 和 Computer Use 等前沿能力。</div>
+      <div class="techs"><span>Messages API</span><span>Tool Use</span><span>Extended Thinking</span><span>Computer Use</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/03_openai_api.md" style="color:var(--accent1)">→ 03 OpenAI API</a>
+        <a href="../agent_platform/theory/phase04_frontier/39_computer_use.md" style="color:var(--accent4)">→ 39 Computer Use</a>
+      </div>
+    </div>
+
+    <!-- 05 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">05</div>
+      <div class="title">Function Calling / Tool Use</div>
+      <div class="concept">LLM 与外部世界交互的核心机制，让模型不仅能够"说话"还能"做事"——调用 API、查询数据库、操作文件系统。</div>
+      <div class="techs"><span>Tool Definition</span><span>Tool Choice</span><span>Parallel Tools</span><span>Tool Result</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/12_langgraph_intro.md" style="color:var(--accent1)">→ 12 LangGraph</a>
+        <a href="../agent_platform/theory/phase02_production/20_mcp.md" style="color:var(--accent2)">→ 20 MCP</a>
+      </div>
+    </div>
+
+    <!-- 06 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">06</div>
+      <div class="title">Embedding 模型 — 文本向量化</div>
+      <div class="concept">将文本转为数值向量的技术，是语义搜索、RAG、聚类和分类等任务的基石。支持本地 BGE 模型部署。</div>
+      <div class="techs"><span>BGE</span><span>OpenAI Embeddings</span><span>Sentence-Transformers</span><span>向量维度</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/07_vector_databases.md" style="color:var(--accent1)">→ 07 向量数据库</a>
+        <a href="../agent_platform/theory/phase01_foundation/09_rag_foundation.md" style="color:var(--accent1)">→ 09 RAG</a>
+      </div>
+    </div>
+
+    <!-- 07 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">07</div>
+      <div class="title">向量数据库 Vector Databases</div>
+      <div class="concept">专为 Embedding 向量的存储和检索设计的数据库，使用 ANN 算法实现毫秒级语义搜索，RAG 架构核心组件。</div>
+      <div class="techs"><span>Chroma</span><span>Qdrant</span><span>Milvus</span><span>Pinecone</span><span>ANN</span><span>HNSW</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/06_embeddings.md" style="color:var(--accent1)">→ 06 Embedding</a>
+        <a href="../agent_platform/theory/phase01_foundation/09_rag_foundation.md" style="color:var(--accent1)">→ 09 RAG</a>
+      </div>
+    </div>
+
+    <!-- 08 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">08</div>
+      <div class="title">文档解析 Document Parsing</div>
+      <div class="concept">将非结构化文档（PDF、Word、HTML）转化为可处理文本数据的过程，RAG 知识库系统的第一道关卡。</div>
+      <div class="techs"><span>PyMuPDF</span><span>Unstructured</span><span>OCR</span><span>Markdown</span><span>Chunking</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/09_rag_foundation.md" style="color:var(--accent1)">→ 09 RAG</a>
+        <a href="../agent_platform/theory/phase01_foundation/06_embeddings.md" style="color:var(--accent1)">→ 06 Embedding</a>
+      </div>
+    </div>
+
+    <!-- 09 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">09</div>
+      <div class="title">RAG 基础 — 检索增强生成</div>
+      <div class="concept">将信息检索与 LLM 生成相结合的架构，解决知识陈旧和幻觉问题，基于外部知识库提供可溯源的精准回答。</div>
+      <div class="techs"><span>Retriever</span><span>Generator</span><span>Chunking</span><span>Embedding</span><span>Reranker</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/06_embeddings.md" style="color:var(--accent1)">→ 06 Embedding</a>
+        <a href="../agent_platform/theory/phase02_production/23_reranker.md" style="color:var(--accent2)">→ 23 Reranker</a>
+        <a href="../agent_platform/theory/phase02_production/24_rag_evaluation.md" style="color:var(--accent2)">→ 24 RAG 评估</a>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">10</div>
+      <div class="title">LangChain — LLM 应用框架</div>
+      <div class="concept">通用 LLM 应用开发框架，提供标准化的组件抽象层和 LangChain Expression Language，Agent 能力已迁移至 LangGraph。</div>
+      <div class="techs"><span>LCEL</span><span>Runnable</span><span>Chain</span><span>Tool</span><span>Agent</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/12_langgraph_intro.md" style="color:var(--accent1)">→ 12 LangGraph</a>
+        <a href="../agent_platform/theory/phase01_foundation/11_llamaindex.md" style="color:var(--accent1)">→ 11 LlamaIndex</a>
+      </div>
+    </div>
+
+    <!-- 11 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">11</div>
+      <div class="title">LlamaIndex — 数据索引框架</div>
+      <div class="concept">专注于数据索引与检索的框架，提供丰富的索引类型（向量/树/摘要/关键词）和灵活的查询引擎。</div>
+      <div class="techs"><span>VectorStoreIndex</span><span>QueryEngine</span><span>Router</span><span>Ingestion Pipeline</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/10_langchain.md" style="color:var(--accent1)">→ 10 LangChain</a>
+        <a href="../agent_platform/theory/phase01_foundation/09_rag_foundation.md" style="color:var(--accent1)">→ 09 RAG</a>
+      </div>
+    </div>
+
+    <!-- 12 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">12</div>
+      <div class="title">LangGraph 入门 — 图结构工作流</div>
+      <div class="concept">使用有向图定义 Agent 执行流程，原生支持循环、条件分支和状态持久化，替代传统 Agent Executor 黑盒。</div>
+      <div class="techs"><span>StateGraph</span><span>Node</span><span>Edge</span><span>Condition</span><span>Checkpoint</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/17_langgraph_advanced.md" style="color:var(--accent2)">→ 17 LangGraph 深入</a>
+        <a href="../agent_platform/theory/phase01_foundation/10_langchain.md" style="color:var(--accent1)">→ 10 LangChain</a>
+      </div>
+    </div>
+
+    <!-- 13 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">13</div>
+      <div class="title">短期记忆 — 对话上下文管理</div>
+      <div class="concept">管理当前会话中的历史对话信息，通过滑动窗口、摘要压缩和 Token 预算策略解决上下文窗口限制。</div>
+      <div class="techs"><span>Sliding Window</span><span>Summary</span><span>Token Budget</span><span>上下文截断</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/21_long_term_memory.md" style="color:var(--accent2)">→ 21 长期记忆</a>
+        <a href="../agent_platform/theory/phase02_production/22_state_persistence.md" style="color:var(--accent2)">→ 22 状态持久化</a>
+      </div>
+    </div>
+
+    <!-- 14 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">14</div>
+      <div class="title">FastAPI — Agent API 服务框架</div>
+      <div class="concept">高性能 Python Web 框架，基于 Starlette 和 Pydantic，为 Agent 平台提供自动文档、请求验证和异步支持。</div>
+      <div class="techs"><span>ASGI</span><span>Pydantic</span><span>SSE</span><span>WebSocket</span><span>Dependency Injection</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/16_python_engineering.md" style="color:var(--accent1)">→ 16 Python 工程化</a>
+        <a href="../agent_platform/theory/phase02_production/30_docker_compose.md" style="color:var(--accent2)">→ 30 Docker</a>
+      </div>
+    </div>
+
+    <!-- 15 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">15</div>
+      <div class="title">LangFuse 可观测性</div>
+      <div class="concept">开源的 LLM 可观测性平台，提供 Trace-based 监控、评估和调试，支持自托管部署，对标 LangSmith。</div>
+      <div class="techs"><span>Tracing</span><span>Span</span><span>Evaluation</span><span>Cost Tracking</span><span>Prompt Management</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/25_observability.md" style="color:var(--accent2)">→ 25 LLM 可观测性</a>
+        <a href="../agent_platform/theory/phase02_production/24_rag_evaluation.md" style="color:var(--accent2)">→ 24 RAG 评估</a>
+      </div>
+    </div>
+
+    <!-- 16 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent1);color:#0f172a;">16</div>
+      <div class="title">Python 工程化 — 项目最佳实践</div>
+      <div class="concept">AI Agent 项目的系统化开发实践，包括项目结构、依赖管理、测试和部署标准流程。</div>
+      <div class="techs"><span>pyproject.toml</span><span>Pytest</span><span>Ruff</span><span>Poetry</span><span>GitHub Actions</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/14_fastapi.md" style="color:var(--accent1)">→ 14 FastAPI</a>
+        <a href="../agent_platform/theory/phase02_production/30_docker_compose.md" style="color:var(--accent2)">→ 30 Docker</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- PHASE 2                                                         -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="phase" data-phase="2">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <div class="phase-num" style="background:var(--accent2);color:#0f172a;">2</div>
+    <h2 style="color:var(--accent2);">Agent 编排与生产化</h2>
+    <span class="phase-tag">第 13-24 周 · 14 专题</span>
+    <span class="phase-tag">多 Agent · 监控 · 安全 · 部署</span>
+    <span class="toggle-icon open">▼</span>
+  </div>
+  <div class="topic-grid" data-phase="2">
+
+    <!-- 17 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">17</div>
+      <div class="title">LangGraph 深入 — 生产级编排</div>
+      <div class="concept">基于 StateGraph 的 Agent 深度编排，支持条件分支、并行执行、人机协同中断/恢复和 Checkpoint 持久化。</div>
+      <div class="techs"><span>StateGraph</span><span>Checkpointer</span><span>PostgreSQL</span><span>Interrupt</span><span>Human-in-Loop</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/12_langgraph_intro.md" style="color:var(--accent1)">→ 12 LangGraph 入门</a>
+        <a href="../agent_platform/theory/phase02_production/22_state_persistence.md" style="color:var(--accent2)">→ 22 状态持久化</a>
+      </div>
+    </div>
+
+    <!-- 18 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">18</div>
+      <div class="title">AutoGen / AG2 — 多智能体对话</div>
+      <div class="concept">微软研究院的多智能体对话框架，Agent 通过结构化对话轮次协作，每个 Agent 独立配置 LLM 和工具。</div>
+      <div class="techs"><span>AssistantAgent</span><span>UserProxyAgent</span><span>GroupChat</span><span>CodeExecutor</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/19_crewai.md" style="color:var(--accent2)">→ 19 CrewAI</a>
+        <a href="../agent_platform/theory/phase02_production/17_langgraph_advanced.md" style="color:var(--accent2)">→ 17 LangGraph</a>
+      </div>
+    </div>
+
+    <!-- 19 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">19</div>
+      <div class="title">CrewAI — 角色化多智能体协作</div>
+      <div class="concept">轻量级角色驱动的多智能体编排框架，Agent 通过预设角色、目标和背景故事协作完成复杂任务。</div>
+      <div class="techs"><span>Agent</span><span>Task</span><span>Crew</span><span>Manager</span><span>Worker</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/18_autogen_ag2.md" style="color:var(--accent2)">→ 18 AutoGen</a>
+        <a href="../agent_platform/theory/phase02_production/17_langgraph_advanced.md" style="color:var(--accent2)">→ 17 LangGraph</a>
+      </div>
+    </div>
+
+    <!-- 20 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">20</div>
+      <div class="title">MCP 协议 — 模型上下文协议</div>
+      <div class="concept">Anthropic 提出的开放协议，基于 JSON-RPC 2.0 标准化 LLM 应用与外部数据源/工具的通信，通用集成层。</div>
+      <div class="techs"><span>JSON-RPC 2.0</span><span>MCP Host</span><span>MCP Server</span><span>stdio</span><span>SSE</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/05_function_calling.md" style="color:var(--accent1)">→ 05 Function Calling</a>
+        <a href="../agent_platform/theory/phase03_platform/31_pydantic_ai.md" style="color:var(--accent3)">→ 31 Pydantic AI</a>
+      </div>
+    </div>
+
+    <!-- 21 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">21</div>
+      <div class="title">长期记忆 — 跨会话用户记忆</div>
+      <div class="concept">通过结构化摘要、向量存储和知识图谱实现跨会话用户个性化，支持 Mem0 和 Zep 等解决方案。</div>
+      <div class="techs"><span>Mem0</span><span>Zep</span><span>Knowledge Graph</span><span>Vector Store</span><span>User Profile</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/13_short_term_memory.md" style="color:var(--accent1)">→ 13 短期记忆</a>
+        <a href="../agent_platform/theory/phase02_production/22_state_persistence.md" style="color:var(--accent2)">→ 22 状态持久化</a>
+      </div>
+    </div>
+
+    <!-- 22 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">22</div>
+      <div class="title">状态持久化 — 生产级状态管理</div>
+      <div class="concept">确保 Agent 工作流在服务重启、多实例部署和长任务中存活，通过 Redis、PostgreSQL 或 LangGraph 持久化。</div>
+      <div class="techs"><span>Redis</span><span>PostgreSQL</span><span>Checkpoint</span><span>Session Manager</span><span>Audit Log</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/17_langgraph_advanced.md" style="color:var(--accent2)">→ 17 LangGraph</a>
+        <a href="../agent_platform/theory/phase03_platform/34_message_queue.md" style="color:var(--accent3)">→ 34 消息队列</a>
+      </div>
+    </div>
+
+    <!-- 23 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">23</div>
+      <div class="title">Reranker 重排序 — 精排提升 RAG</div>
+      <div class="concept">使用 Cross-encoder 对向量检索的候选文档重新评分，两阶段检索架构可将 RAG 准确率提升 15-30%。</div>
+      <div class="techs"><span>Cross-encoder</span><span>Bi-encoder</span><span>BGE Reranker</span><span>Cohere Rerank</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/09_rag_foundation.md" style="color:var(--accent1)">→ 09 RAG</a>
+        <a href="../agent_platform/theory/phase02_production/24_rag_evaluation.md" style="color:var(--accent2)">→ 24 RAG 评估</a>
+      </div>
+    </div>
+
+    <!-- 24 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">24</div>
+      <div class="title">RAG 评估体系</div>
+      <div class="concept">系统评估检索相关性和生成准确性，基于 RAGAS、DeepEval 和 LLM-as-Judge 框架，覆盖离线和在线评估。</div>
+      <div class="techs"><span>RAGAS</span><span>DeepEval</span><span>LLM-as-Judge</span><span>Faithfulness</span><span>Context Precision</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/25_observability.md" style="color:var(--accent2)">→ 25 可观测性</a>
+        <a href="../agent_platform/theory/phase02_production/26_guardrails.md" style="color:var(--accent2)">→ 26 Guardrails</a>
+      </div>
+    </div>
+
+    <!-- 25 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">25</div>
+      <div class="title">LLM 可观测性 — 监控与追踪</div>
+      <div class="concept">基于 OpenTelemetry 收集 LLM 运行时数据（延迟、Token、成本、Prompt 版本），使用 LangFuse/Helicone/Arize 分析。</div>
+      <div class="techs"><span>LangFuse</span><span>Arize Phoenix</span><span>Helicone</span><span>OpenTelemetry</span><span>Trace</span><span>Span</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase01_foundation/15_langfuse_observability.md" style="color:var(--accent1)">→ 15 LangFuse</a>
+        <a href="../agent_platform/theory/phase02_production/24_rag_evaluation.md" style="color:var(--accent2)">→ 24 RAG 评估</a>
+      </div>
+    </div>
+
+    <!-- 26 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">26</div>
+      <div class="title">Guardrails 安全护栏</div>
+      <div class="concept">LLM 应用的输入/输出安全过滤机制，使用 NeMo Guardrails/Guardrails AI 检测有害内容、Prompt 注入和 PII。</div>
+      <div class="techs"><span>NeMo Guardrails</span><span>Guardrails AI</span><span>Colang</span><span>Input Rails</span><span>Output Rails</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/27_prompt_injection.md" style="color:var(--accent2)">→ 27 Prompt 注入防御</a>
+        <a href="../agent_platform/theory/phase02_production/29_code_sandbox.md" style="color:var(--accent2)">→ 29 代码沙箱</a>
+      </div>
+    </div>
+
+    <!-- 27 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">27</div>
+      <div class="title">Prompt 注入防御</div>
+      <div class="concept">通过直接或间接（RAG 嵌入）恶意输入绕过 LLM 系统指令的攻击，需要多层防护包括输入消毒和指令层级防御。</div>
+      <div class="techs"><span>OWASP LLM Top 10</span><span>Instruction Hierarchy</span><span>Input Sanitizer</span><span>Direct Injection</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/26_guardrails.md" style="color:var(--accent2)">→ 26 Guardrails</a>
+        <a href="../agent_platform/theory/phase02_production/29_code_sandbox.md" style="color:var(--accent2)">→ 29 代码沙箱</a>
+      </div>
+    </div>
+
+    <!-- 28 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">28</div>
+      <div class="title">浏览器自动化</div>
+      <div class="concept">通过 Playwright/Puppeteer/Selenium 编程控制浏览器，用于数据采集、自动化测试、RPA 和 AI Agent Web 交互。</div>
+      <div class="techs"><span>Playwright</span><span>Puppeteer</span><span>Selenium</span><span>Stealth</span><span>Browser Use</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/29_code_sandbox.md" style="color:var(--accent2)">→ 29 代码沙箱</a>
+        <a href="../agent_platform/theory/phase04_frontier/39_computer_use.md" style="color:var(--accent4)">→ 39 Computer Use</a>
+      </div>
+    </div>
+
+    <!-- 29 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">29</div>
+      <div class="title">代码执行沙箱</div>
+      <div class="concept">通过 Docker/E2B/Modal/Pyodide 安全隔离执行 LLM 生成的不可信代码，平衡 AI 执行能力与系统安全。</div>
+      <div class="techs"><span>Docker</span><span>E2B</span><span>Modal</span><span>Pyodide</span><span>Seccomp</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/30_docker_compose.md" style="color:var(--accent2)">→ 30 Docker</a>
+        <a href="../agent_platform/theory/phase02_production/26_guardrails.md" style="color:var(--accent2)">→ 26 Guardrails</a>
+      </div>
+    </div>
+
+    <!-- 30 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent2);color:#0f172a;">30</div>
+      <div class="title">Docker / Docker Compose</div>
+      <div class="concept">容器化部署基础设施，通过 Dockerfile 和 compose.yaml 管理多服务 AI Agent 系统的构建和编排。</div>
+      <div class="techs"><span>Docker</span><span>Docker Compose</span><span>Multi-stage Build</span><span>Dockerfile</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/29_code_sandbox.md" style="color:var(--accent2)">→ 29 代码沙箱</a>
+        <a href="../agent_platform/theory/phase03_platform/35_kubernetes.md" style="color:var(--accent3)">→ 35 Kubernetes</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- PHASE 3                                                         -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="phase" data-phase="3">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <div class="phase-num" style="background:var(--accent3);color:#0f172a;">3</div>
+    <h2 style="color:var(--accent3);">平台化与高级工程</h2>
+    <span class="phase-tag">第 25-34 周 · 8 专题</span>
+    <span class="phase-tag">私有化 · 异步 · 多租户 · 平台</span>
+    <span class="toggle-icon open">▼</span>
+  </div>
+  <div class="topic-grid" data-phase="3">
+
+    <!-- 31 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent3);color:#0f172a;">31</div>
+      <div class="title">Pydantic AI — 结构化 Agent 框架</div>
+      <div class="concept">基于 Pydantic v2 的 Python Agent 框架，以类型安全优先，通过 @agent 装饰器和依赖注入提供结构化验证与编排。</div>
+      <div class="techs"><span>Pydantic v2</span><span>@agent</span><span>Dependency Injection</span><span>OpenAI</span><span>Anthropic</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase03_platform/32_open_source_models.md" style="color:var(--accent3)">→ 32 开源模型</a>
+        <a href="../agent_platform/theory/phase03_platform/37_dspy.md" style="color:var(--accent3)">→ 37 DSPy</a>
+      </div>
+    </div>
+
+    <!-- 32 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent3);color:#0f172a;">32</div>
+      <div class="title">开源模型 — 本地私有化推理</div>
+      <div class="concept">探讨 Llama/Qwen/Mistral/DeepSeek 等开源大模型生态，支持本地 GPU 推理、GGUF 量化和 vLLM 部署。</div>
+      <div class="techs"><span>Llama 3</span><span>Qwen 2.5</span><span>Mistral</span><span>DeepSeek</span><span>vLLM</span><span>Ollama</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase03_platform/31_pydantic_ai.md" style="color:var(--accent3)">→ 31 Pydantic AI</a>
+        <a href="../agent_platform/theory/phase04_frontier/41_fine_tuning.md" style="color:var(--accent4)">→ 41 微调</a>
+      </div>
+    </div>
+
+    <!-- 33 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent3);color:#0f172a;">33</div>
+      <div class="title">Agent 托管平台</div>
+      <div class="concept">LangGraph Platform / Modal / Vertex AI 等一站式 Agent 部署方案，提供流式响应、GPU 管理和自动扩缩容。</div>
+      <div class="techs"><span>LangGraph Platform</span><span>Modal</span><span>Vertex AI</span><span>Serverless</span><span>GPU</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase03_platform/35_kubernetes.md" style="color:var(--accent3)">→ 35 Kubernetes</a>
+        <a href="../agent_platform/theory/phase03_platform/38_cost_rate_limit.md" style="color:var(--accent3)">→ 38 成本控制</a>
+      </div>
+    </div>
+
+    <!-- 34 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent3);color:#0f172a;">34</div>
+      <div class="title">消息队列 — 异步任务与事件驱动</div>
+      <div class="concept">Agent 系统中实现异步任务、组件解耦和流量削峰的核心基础设施，支持 Celery/RabbitMQ/Kafka。</div>
+      <div class="techs"><span>Celery</span><span>RabbitMQ</span><span>Kafka</span><span>Redis Streams</span><span>Worker</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase03_platform/35_kubernetes.md" style="color:var(--accent3)">→ 35 Kubernetes</a>
+        <a href="../agent_platform/theory/phase03_platform/38_cost_rate_limit.md" style="color:var(--accent3)">→ 38 成本控制</a>
+      </div>
+    </div>
+
+    <!-- 35 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent3);color:#0f172a;">35</div>
+      <div class="title">Kubernetes — 容器编排</div>
+      <div class="concept">业界标准容器编排平台，为 Agent 生产部署提供声明式部署、自动扩缩容、自愈和服务发现能力。</div>
+      <div class="techs"><span>Kubernetes</span><span>Docker</span><span>Pod</span><span>Deployment</span><span>HPA</span><span>Ingress</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/30_docker_compose.md" style="color:var(--accent2)">→ 30 Docker</a>
+        <a href="../agent_platform/theory/phase03_platform/33_managed_platforms.md" style="color:var(--accent3)">→ 33 托管平台</a>
+      </div>
+    </div>
+
+    <!-- 36 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent3);color:#0f172a;">36</div>
+      <div class="title">多租户权限 — 平台安全架构</div>
+      <div class="concept">确保不同团队/客户的数据、配置和性能相互隔离，通过 RBAC、行级隔离和 JWT 实现安全的多租户管理。</div>
+      <div class="techs"><span>RBAC</span><span>RLS</span><span>JWT</span><span>Auth0</span><span>Ory</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase03_platform/35_kubernetes.md" style="color:var(--accent3)">→ 35 K8s</a>
+        <a href="../agent_platform/theory/phase03_platform/38_cost_rate_limit.md" style="color:var(--accent3)">→ 38 成本控制</a>
+      </div>
+    </div>
+
+    <!-- 37 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent3);color:#0f172a;">37</div>
+      <div class="title">DSPy — 编程式 Prompt 优化</div>
+      <div class="concept">斯坦福大学的 Prompt 编程框架，通过声明式 Signature、Module 和编译器自动化优化 Prompt，告别手动调参。</div>
+      <div class="techs"><span>DSPy</span><span>Signature</span><span>Module</span><span>Compiler</span><span>Optimizer</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase03_platform/31_pydantic_ai.md" style="color:var(--accent3)">→ 31 Pydantic AI</a>
+        <a href="../agent_platform/theory/phase03_platform/32_open_source_models.md" style="color:var(--accent3)">→ 32 开源模型</a>
+      </div>
+    </div>
+
+    <!-- 38 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent3);color:#0f172a;">38</div>
+      <div class="title">成本控制与限流</div>
+      <div class="concept">通过限流、缓存、模型路由和级联策略控制 LLM API 调用成本，保障 Agent 系统的经济性运营。</div>
+      <div class="techs"><span>LiteLLM</span><span>tiktoken</span><span>Semantic Cache</span><span>Rate Limiting</span><span>Model Routing</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase03_platform/34_message_queue.md" style="color:var(--accent3)">→ 34 消息队列</a>
+        <a href="../agent_platform/theory/phase03_platform/36_multi_tenancy.md" style="color:var(--accent3)">→ 36 多租户</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- PHASE 4                                                         -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="phase" data-phase="4">
+  <div class="phase-header" onclick="togglePhase(this)">
+    <div class="phase-num" style="background:var(--accent4);color:#0f172a;">4</div>
+    <h2 style="color:var(--accent4);">前沿探索</h2>
+    <span class="phase-tag">第 35-44 周 · 3 专题</span>
+    <span class="phase-tag">GUI · 多模态 · 微调</span>
+    <span class="toggle-icon open">▼</span>
+  </div>
+  <div class="topic-grid" data-phase="4">
+
+    <!-- 39 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent4);color:#0f172a;">39</div>
+      <div class="title">Computer Use / GUI Agent</div>
+      <div class="concept">AI Agent 通过视觉像素输入和模拟物理操作直接操控计算机 GUI，突破传统 API 边界，操作没有 API 的遗留系统。</div>
+      <div class="techs"><span>Anthropic Computer Use</span><span>Browser Use</span><span>RPA</span><span>Screenshot</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase02_production/28_browser_automation.md" style="color:var(--accent2)">→ 28 浏览器自动化</a>
+        <a href="../agent_platform/theory/phase04_frontier/40_multimodal_agent.md" style="color:var(--accent4)">→ 40 多模态 Agent</a>
+      </div>
+    </div>
+
+    <!-- 40 -->
+    <div class="topic" data-key="key">
+      <div class="num" style="background:var(--accent4);color:#0f172a;">40</div>
+      <div class="title">多模态 Agent</div>
+      <div class="concept">同时处理文本、图像、音频、视频等多种数据模态的 Agent，实现视觉问答、语音助手、视频理解等丰富交互。</div>
+      <div class="techs"><span>GPT-4V</span><span>GPT-4o</span><span>Gemini</span><span>Claude 3</span><span>Deepgram</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase04_frontier/39_computer_use.md" style="color:var(--accent4)">→ 39 Computer Use</a>
+        <a href="../agent_platform/theory/phase04_frontier/41_fine_tuning.md" style="color:var(--accent4)">→ 41 微调</a>
+      </div>
+    </div>
+
+    <!-- 41 -->
+    <div class="topic" data-key="free">
+      <div class="num" style="background:var(--accent4);color:#0f172a;">41</div>
+      <div class="title">Agent 微调 Fine-tuning</div>
+      <div class="concept">在预训练模型基础上使用 Agent 场景标注数据微调，提升工具调用格式遵循、任务规划和多轮对话一致性。</div>
+      <div class="techs"><span>SFT</span><span>LoRA</span><span>QLoRA</span><span>Hugging Face</span><span>Transformers</span></div>
+      <div class="relations">
+        <a href="../agent_platform/theory/phase03_platform/32_open_source_models.md" style="color:var(--accent3)">→ 32 开源模型</a>
+        <a href="../agent_platform/theory/phase03_platform/37_dspy.md" style="color:var(--accent3)">→ 37 DSPy</a>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════════ -->
+<!-- EXTERNAL RESOURCES                                              -->
+<!-- ════════════════════════════════════════════════════════════════ -->
+<div class="ext-links">
+  <h3>📎 外部学习资源与官方链接</h3>
+  <div class="links-grid">
+
+    <a href="https://platform.openai.com/docs/overview" target="_blank">
+      <span class="cat">API</span> OpenAI API 文档
+    </a>
+    <a href="https://docs.anthropic.com/claude/docs/" target="_blank">
+      <span class="cat">API</span> Anthropic Claude 文档
+    </a>
+    <a href="https://python.langchain.com/docs" target="_blank">
+      <span class="cat">框架</span> LangChain 文档
+    </a>
+    <a href="https://langchain-ai.github.io/langgraph/" target="_blank">
+      <span class="cat">框架</span> LangGraph 文档
+    </a>
+    <a href="https://docs.llamaindex.ai/en/stable/" target="_blank">
+      <span class="cat">框架</span> LlamaIndex 文档
+    </a>
+    <a href="https://microsoft.github.io/autogen/stable/" target="_blank">
+      <span class="cat">框架</span> AutoGen / AG2 文档
+    </a>
+    <a href="https://docs.crewai.com/" target="_blank">
+      <span class="cat">框架</span> CrewAI 文档
+    </a>
+    <a href="https://ai.pydantic.dev/" target="_blank">
+      <span class="cat">框架</span> Pydantic AI 文档
+    </a>
+    <a href="https://modelcontextprotocol.io/" target="_blank">
+      <span class="cat">协议</span> MCP 协议文档
+    </a>
+    <a href="https://dspy.ai/" target="_blank">
+      <span class="cat">优化</span> DSPy 框架
+    </a>
+    <a href="https://playwright.dev/python/" target="_blank">
+      <span class="cat">工具</span> Playwright 文档
+    </a>
+    <a href="https://www.langfuse.com/docs" target="_blank">
+      <span class="cat">监控</span> LangFuse 文档
+    </a>
+    <a href="https://github.com/NVIDIA/NeMo-Guardrails" target="_blank">
+      <span class="cat">安全</span> NeMo Guardrails
+    </a>
+    <a href="https://docs.ragas.io/" target="_blank">
+      <span class="cat">评估</span> RAGAS 文档
+    </a>
+    <a href="https://fastapi.tiangolo.com/" target="_blank">
+      <span class="cat">API</span> FastAPI 文档
+    </a>
+    <a href="https://docs.docker.com/compose/" target="_blank">
+      <span class="cat">部署</span> Docker Compose 文档
+    </a>
+    <a href="https://kubernetes.io/docs/" target="_blank">
+      <span class="cat">部署</span> Kubernetes 文档
+    </a>
+    <a href="https://github.com/mem0ai/mem0" target="_blank">
+      <span class="cat">记忆</span> Mem0 长期记忆
+    </a>
+    <a href="https://ollama.com/" target="_blank">
+      <span class="cat">模型</span> Ollama 本地模型
+    </a>
+    <a href="https://docs.vllm.ai/" target="_blank">
+      <span class="cat">推理</span> vLLM 推理引擎
+    </a>
+    <a href="https://www.tryhelix.ai/" target="_blank">
+      <span class="cat">沙箱</span> E2B Sandbox
+    </a>
+    <a href="https://github.com/browser-use/browser-use" target="_blank">
+      <span class="cat">AI</span> Browser Use 框架
+    </a>
+    <a href="https://www.langchain.com/langsmith" target="_blank">
+      <span class="cat">监控</span> LangSmith
+    </a>
+    <a href="https://python.langchain.com/docs/how_to/lcel_cheatsheet/" target="_blank">
+      <span class="cat">指南</span> LCEL 速查表
+    </a>
+
+  </div>
+</div>
+
+<div class="ext-links">
+  <h3>🗂 综合项目入口</h3>
+  <div class="links-grid">
+    <a href="../agent_platform/theory/README.md" style="grid-column:span 1;">
+      <span class="cat">📖</span> 理论学习体系总览
+    </a>
+    <a href="../agent_platform/" style="grid-column:span 1;">
+      <span class="cat">💻</span> agent_platform 源代码
+    </a>
+    <a href="AI_Agent技术栈全景图_完整版.xlsx" style="grid-column:span 1;">
+      <span class="cat">📊</span> 全景图 Excel
+    </a>
+    <a href="AI_Agent技术栈学习计划.md" style="grid-column:span 1;">
+      <span class="cat">📝</span> 学习计划
+    </a>
+  </div>
+</div>
+
+<footer>
+  AI Agent 技术栈全景路线图 · 共 41 个专题 · 4 个阶段 · 基于 <strong>agent_platform/theory/</strong><br>
+  生成于 2026-07-08 · 每个卡片点击可追踪到对应理论文档
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// Phase toggle (click header to collapse/expand)
+// ═══════════════════════════════════════════════════════
+function togglePhase(header) {
+  const grid = header.nextElementSibling;
+  const icon = header.querySelector('.toggle-icon');
+  grid.classList.toggle('hidden');
+  icon.classList.toggle('open');
+}
+
+// ═══════════════════════════════════════════════════════
+// Filter buttons
+// ═══════════════════════════════════════════════════════
+document.querySelectorAll('.filter-bar button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-bar button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filter = btn.dataset.filter;
+
+    document.querySelectorAll('.topic-grid').forEach(grid => grid.classList.remove('hidden'));
+    document.querySelectorAll('.phase>.topic-grid .topic').forEach(t => t.style.display = '');
+    document.querySelectorAll('.phase-header .toggle-icon').forEach(ic => ic.classList.add('open'));
+
+    if (filter === 'all') return;
+
+    if (filter === 'key' || filter === 'free') {
+      document.querySelectorAll('.phase>.topic-grid .topic').forEach(t => {
+        t.style.display = t.dataset.key === filter ? '' : 'none';
+      });
+    } else {
+      const phase = filter.replace('phase','');
+      document.querySelectorAll('.phase').forEach(p => {
+        const grid = p.querySelector('.topic-grid');
+        if (p.dataset.phase === phase) {
+          grid.classList.remove('hidden');
+          p.querySelector('.toggle-icon').classList.add('open');
+        } else {
+          grid.classList.add('hidden');
+          p.querySelector('.toggle-icon').classList.remove('open');
+        }
+      });
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+// Count cross-references on the page
+// ═══════════════════════════════════════════════════════
+const totalLinks = document.querySelectorAll('.relations a').length;
+document.getElementById('stat-total').textContent = `🔗 ${totalLinks} 条交叉引用`;
+
+// ═══════════════════════════════════════════════════════
+// Tooltip / hover info for key dependency
+// ═══════════════════════════════════════════════════════
+document.querySelectorAll('.topic[data-key]').forEach(t => {
+  const key = t.dataset.key;
+  const badge = document.createElement('div');
+  badge.style.cssText = 'position:absolute;top:10px;right:10px;font-size:0.65rem;padding:1px 7px;border-radius:6px;background:rgba(0,0,0,.3);';
+  badge.textContent = key === 'key' ? '🔑' : '🔓';
+  badge.title = key === 'key' ? '需要 API Key' : '免费/本地可运行';
+  t.appendChild(badge);
+});
+
+// ═══════════════════════════════════════════════════════
+// Add click-to-open to resource links
+// ═══════════════════════════════════════════════════════
+document.querySelectorAll('.topic .relations a').forEach(a => {
+  a.title = '打开理论文档';
+  a.target = '_blank';
+});
+</script>
+</body>
+</html>
