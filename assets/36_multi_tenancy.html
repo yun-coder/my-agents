@@ -1,0 +1,918 @@
+<!-- @dsCard group="Platform Architecture" -->
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>36 多租户权限 — Agent 平台安全架构</title>
+<style>
+  /* === Design tokens (palette) === */
+  .viz-root {
+    --surface-1:      #fcfcfb;
+    --surface-2:      #f4f4f1;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --accent-blue:    #2a78d6;
+    --accent-aqua:    #1baf7a;
+    --accent-yellow:  #eda100;
+    --accent-violet:  #4a3aa7;
+    --accent-red:     #e34948;
+    --accent-orange:  #eb6834;
+    --accent-green:   #008300;
+    --status-good:    #0ca30c;
+    --status-warn:    #fab219;
+    --status-serious: #ec835a;
+    --border:         rgba(11,11,11,0.10);
+    --font:           system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    .viz-root {
+      --surface-1:      #1a1a19;
+      --surface-2:      #242422;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --accent-blue:    #3987e5;
+      --accent-aqua:    #199e70;
+      --accent-yellow:  #c98500;
+      --accent-violet:  #9085e9;
+      --accent-red:     #e66767;
+      --accent-orange:  #d95926;
+      --accent-green:   #008300;
+      --border:         rgba(255,255,255,0.10);
+    }
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    line-height: 1.6;
+    padding: 0;
+  }
+
+  .viz-root {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+
+  /* === Hero === */
+  .hero {
+    text-align: center;
+    padding: 48px 0 32px;
+    border-bottom: 1px solid var(--grid);
+    margin-bottom: 48px;
+  }
+  .hero h1 {
+    font-size: 32px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+  }
+  .hero .subtitle {
+    font-size: 15px;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  .hero .badge-row {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .badge {
+    font-size: 12px;
+    padding: 2px 10px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+  }
+  .badge.blue  { background: color-mix(in srgb, var(--accent-blue) 15%, transparent); color: var(--accent-blue); border-color: color-mix(in srgb, var(--accent-blue) 30%, transparent); }
+  .badge.green { background: color-mix(in srgb, var(--accent-aqua) 15%, transparent); color: var(--accent-aqua); border-color: color-mix(in srgb, var(--accent-aqua) 30%, transparent); }
+  .badge.violet{ background: color-mix(in srgb, var(--accent-violet) 15%, transparent); color: var(--accent-violet); border-color: color-mix(in srgb, var(--accent-violet) 30%, transparent); }
+  .badge.red   { background: color-mix(in srgb, var(--accent-red) 15%, transparent); color: var(--accent-red); border-color: color-mix(in srgb, var(--accent-red) 30%, transparent); }
+
+  /* === Section === */
+  .section {
+    margin-bottom: 56px;
+  }
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-title .num {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+  .section-desc {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+  }
+
+  /* === SVG diagram container === */
+  .diagram-container {
+    background: var(--surface-2);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid var(--grid);
+    overflow-x: auto;
+  }
+  .diagram-container svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* === Comparison cards === */
+  .strategy-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 800px) { .strategy-grid { grid-template-columns: 1fr; } }
+
+  .strategy-card {
+    background: var(--surface-2);
+    border: 1px solid var(--grid);
+    border-radius: 10px;
+    padding: 20px;
+    position: relative;
+  }
+  .strategy-card .card-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    margin-bottom: 12px;
+  }
+  .strategy-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .strategy-card .card-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; }
+  .strategy-card .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 3px;
+    margin: 2px 4px 2px 0;
+  }
+  .tag.iso-high  { background: color-mix(in srgb, var(--accent-green) 15%, transparent); color: var(--accent-green); }
+  .tag.iso-mid   { background: color-mix(in srgb, var(--accent-yellow) 20%, transparent); color: var(--accent-yellow); }
+  .tag.iso-low   { background: color-mix(in srgb, var(--accent-red) 15%, transparent); color: var(--accent-red); }
+  .tag.cost-high { background: color-mix(in srgb, var(--accent-red) 15%, transparent); color: var(--accent-red); }
+  .tag.cost-mid  { background: color-mix(in srgb, var(--accent-yellow) 20%, transparent); color: var(--accent-yellow); }
+  .tag.cost-low  { background: color-mix(in srgb, var(--accent-aqua) 15%, transparent); color: var(--accent-aqua); }
+  .tag.use       { background: color-mix(in srgb, var(--accent-violet) 15%, transparent); color: var(--accent-violet); }
+
+  .strategy-card .pros-cons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+    font-size: 12px;
+  }
+  .strategy-card .pros-cons div { padding: 6px 8px; border-radius: 4px; background: var(--surface-1); }
+  .strategy-card .pros-cons .label { font-weight: 500; margin-bottom: 2px; }
+  .strategy-card .pros-cons ul { list-style: none; padding: 0; color: var(--text-secondary); }
+  .strategy-card .pros-cons li::before { content: "· "; }
+
+  /* === RBAC tree === */
+  .rbac-tree {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    padding: 20px 0;
+  }
+  .rbac-row {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .rbac-node {
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: center;
+    min-width: 80px;
+    border: 1px solid var(--border);
+  }
+  .rbac-node.user   { background: color-mix(in srgb, var(--accent-blue) 15%, transparent); color: var(--accent-blue); }
+  .rbac-node.role   { background: color-mix(in srgb, var(--accent-aqua) 15%, transparent); color: var(--accent-aqua); }
+  .rbac-node.perm   { background: color-mix(in srgb, var(--accent-violet) 15%, transparent); color: var(--accent-violet); }
+  .rbac-arrow {
+    font-size: 20px;
+    color: var(--text-muted);
+    margin: 0 8px;
+  }
+
+  /* === Security layers === */
+  .layer-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .layer-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 13px;
+  }
+  .layer-bar .layer-icon { font-size: 16px; width: 28px; text-align: center; }
+  .layer-bar .layer-name { font-weight: 600; min-width: 80px; }
+  .layer-bar .layer-desc { color: var(--text-secondary); flex: 1; }
+  .layer-bar .layer-tags { display: flex; gap: 4px; flex-wrap: wrap; }
+  .layer-bar .layer-tags span {
+    font-size: 11px;
+    padding: 1px 7px;
+    border-radius: 3px;
+    background: var(--surface-1);
+    border: 1px solid var(--grid);
+    color: var(--text-muted);
+  }
+
+  /* === Core goals === */
+  .goal-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media (max-width: 700px) { .goal-row { flex-direction: column; } }
+  .goal-card {
+    flex: 1;
+    padding: 20px;
+    border-radius: 10px;
+    border: 1px solid var(--grid);
+    background: var(--surface-2);
+    text-align: center;
+  }
+  .goal-card .goal-icon { font-size: 28px; margin-bottom: 8px; }
+  .goal-card h4 { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .goal-card p { font-size: 13px; color: var(--text-secondary); }
+
+  /* === Auth flow === */
+  .flow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding: 12px 0;
+  }
+  .flow-step {
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    background: var(--surface-2);
+    border: 1px solid var(--grid);
+    min-width: 64px;
+  }
+  .flow-step.highlight {
+    background: color-mix(in srgb, var(--accent-blue) 15%, transparent);
+    border-color: color-mix(in srgb, var(--accent-blue) 30%, transparent);
+    color: var(--accent-blue);
+  }
+  .flow-arrow {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  /* === Footer === */
+  .diagram-footer {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  /* === Inline SVG text === */
+  .svg-label { font-family: var(--font); }
+
+  /* === Pillar component (reused in SVG) === */
+  .pillar-box { transition: opacity .15s; }
+</style>
+</head>
+<body>
+<div class="viz-root">
+
+  <!-- ===== Hero ===== -->
+  <div class="hero">
+    <h1>多租户权限架构</h1>
+    <p class="subtitle">一个系统实例同时服务多个租户，每个租户的数据、配置和性能相互隔离</p>
+    <div class="badge-row">
+      <span class="badge blue">Multi-Tenancy</span>
+      <span class="badge green">RLS</span>
+      <span class="badge violet">RBAC</span>
+      <span class="badge red">JWT</span>
+      <span class="badge">审计日志</span>
+      <span class="badge">数据加密</span>
+    </div>
+  </div>
+
+  <!-- ===== 1. 核心目标 ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">01</span> 三个核心目标</div>
+    <p class="section-desc">多租户架构的设计约束 — 平衡安全、性能与灵活性</p>
+    <div class="goal-row">
+      <div class="goal-card">
+        <div class="goal-icon">🔒</div>
+        <h4>数据隔离</h4>
+        <p>租户 A 的数据不能被租户 B 访问，杜绝越权泄漏</p>
+      </div>
+      <div class="goal-card">
+        <div class="goal-icon">⚡</div>
+        <h4>性能隔离</h4>
+        <p>一个租户的突发负载不影响其他租户的响应速度</p>
+      </div>
+      <div class="goal-card">
+        <div class="goal-icon">⚙️</div>
+        <h4>可定制性</h4>
+        <p>每个租户独立配置 Agent 行为、知识库和角色体系</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. 隔离策略对比 ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">02</span> 三种隔离策略</div>
+    <p class="section-desc">从强到弱，成本与隔离度呈正比</p>
+    <div class="strategy-grid">
+      <!-- 数据库隔离 -->
+      <div class="strategy-card">
+        <div class="card-icon" style="background:color-mix(in srgb, var(--accent-red) 15%, transparent);">🗄️</div>
+        <h3>数据库隔离</h3>
+        <p class="card-desc">每个租户独占一个数据库实例</p>
+        <div>
+          <span class="tag iso-high">隔离度 ●●●</span>
+          <span class="tag cost-high">成本 ●●●</span>
+          <span class="tag use">金融 / 医疗</span>
+        </div>
+        <div class="pros-cons">
+          <div>
+            <div class="label">✅ 优势</div>
+            <ul>
+              <li>最强数据隔离</li>
+              <li>备份恢复互不影响</li>
+              <li>独立扩缩容</li>
+            </ul>
+          </div>
+          <div>
+            <div class="label">⚠️ 成本</div>
+            <ul>
+              <li>维护成本高</li>
+              <li>连接数随租户增长</li>
+              <li>资源利用率低</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schema 隔离 -->
+      <div class="strategy-card">
+        <div class="card-icon" style="background:color-mix(in srgb, var(--accent-yellow) 20%, transparent);">📂</div>
+        <h3>Schema 隔离</h3>
+        <p class="card-desc">同一数据库，不同 Schema</p>
+        <div>
+          <span class="tag iso-high">隔离度 ●●○</span>
+          <span class="tag cost-mid">成本 ●●○</span>
+          <span class="tag use">企业版 SaaS</span>
+        </div>
+        <div class="pros-cons">
+          <div>
+            <div class="label">✅ 优势</div>
+            <ul>
+              <li>隔离性好</li>
+              <li>共享连接池</li>
+              <li>统一备份策略</li>
+            </ul>
+          </div>
+          <div>
+            <div class="label">⚠️ 成本</div>
+            <ul>
+              <li>Schema 变更需同步</li>
+              <li>迁移脚本复杂</li>
+              <li>跨 Schema 查询困难</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- 行级隔离 -->
+      <div class="strategy-card">
+        <div class="card-icon" style="background:color-mix(in srgb, var(--accent-aqua) 15%, transparent);">📋</div>
+        <h3>行级隔离 (RLS)</h3>
+        <p class="card-desc">同一张表，通过 tenant_id 区分</p>
+        <div>
+          <span class="tag iso-mid">隔离度 ●●○</span>
+          <span class="tag cost-low">成本 ●○○</span>
+          <span class="tag use">SaaS 标准方案</span>
+        </div>
+        <div class="pros-cons">
+          <div>
+            <div class="label">✅ 优势</div>
+            <ul>
+              <li>实现最简单</li>
+              <li>连接数最少</li>
+              <li>PostgreSQL RLS 兜底</li>
+            </ul>
+          </div>
+          <div>
+            <div class="label">⚠️ 成本</div>
+            <ul>
+              <li>应用层需带 tenant_id</li>
+              <li>索引设计更关键</li>
+              <li>物理上不隔离</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 3. 全局架构图 ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">03</span> 多租户架构总览</div>
+    <p class="section-desc">从租户入口到数据存储的完整链路</p>
+    <div class="diagram-container">
+      <svg viewBox="0 0 1060 440" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font);">
+        <defs>
+          <filter id="shadow1"><feDropShadow dx="0" dy="1" stdDeviation="2" flood-opacity="0.10"/></filter>
+          <marker id="arrowBlue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#2a78d6"/>
+          </marker>
+          <marker id="arrowGray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#898781"/>
+          </marker>
+        </defs>
+
+        <!-- Background -->
+        <rect x="0" y="0" width="1060" height="440" rx="8" fill="var(--surface-2)" opacity="0.3"/>
+
+        <!-- ===== Tenants column ===== -->
+        <text x="80" y="36" font-size="11" fill="var(--text-muted)" font-weight="500">TENANTS</text>
+        <rect x="30" y="46" width="110" height="48" rx="8" fill="var(--surface-2)" stroke="var(--accent-blue)" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="85" y="68" font-size="12" fill="var(--accent-blue)" text-anchor="middle" font-weight="500">🏢 租户 A</text>
+        <text x="85" y="84" font-size="10" fill="var(--text-muted)" text-anchor="middle">Acme Corp</text>
+
+        <rect x="30" y="104" width="110" height="48" rx="8" fill="var(--surface-2)" stroke="var(--accent-aqua)" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="85" y="126" font-size="12" fill="var(--accent-aqua)" text-anchor="middle" font-weight="500">🏢 租户 B</text>
+        <text x="85" y="142" font-size="10" fill="var(--text-muted)" text-anchor="middle">Beta Inc</text>
+
+        <rect x="30" y="162" width="110" height="48" rx="8" fill="var(--surface-2)" stroke="var(--accent-orange)" stroke-width="1.5" filter="url(#shadow1)"/>
+        <text x="85" y="184" font-size="12" fill="var(--accent-orange)" text-anchor="middle" font-weight="500">🏢 租户 C</text>
+        <text x="85" y="200" font-size="10" fill="var(--text-muted)" text-anchor="middle">Charlie Ltd</text>
+
+        <ellipse cx="85" cy="226" rx="8" ry="4" fill="none" stroke="var(--text-muted)" stroke-width="1"/>
+        <text x="85" y="242" font-size="10" fill="var(--text-muted)" text-anchor="middle">…</text>
+
+        <!-- Arrows from tenants → gateway -->
+        <path d="M142,70 L190,70" stroke="#2a78d6" stroke-width="1.5" marker-end="url(#arrowBlue)" opacity="0.5"/>
+        <path d="M142,128 L190,128" stroke="#1baf7a" stroke-width="1.5" marker-end="url(#arrowBlue)" opacity="0.5"/>
+        <path d="M142,186 L190,186" stroke="#eb6834" stroke-width="1.5" marker-end="url(#arrowBlue)" opacity="0.5"/>
+
+        <!-- ===== Gateway / API column ===== -->
+        <text x="290" y="36" font-size="11" fill="var(--text-muted)" font-weight="500">API GATEWAY</text>
+        <rect x="192" y="46" width="200" height="210" rx="10" fill="var(--surface-1)" stroke="var(--grid)" stroke-width="1" filter="url(#shadow1)"/>
+        <rect x="202" y="56" width="180" height="28" rx="6" fill="color-mix(in srgb, var(--accent-violet) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-violet) 25%, transparent)" stroke-width="1"/>
+        <text x="292" y="74" font-size="11" fill="var(--accent-violet)" text-anchor="middle" font-weight="500">JWT 认证中间件</text>
+
+        <rect x="202" y="92" width="180" height="28" rx="6" fill="color-mix(in srgb, var(--accent-blue) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-blue) 25%, transparent)" stroke-width="1"/>
+        <text x="292" y="110" font-size="11" fill="var(--accent-blue)" text-anchor="middle" font-weight="500">租户解析器</text>
+
+        <rect x="202" y="128" width="180" height="28" rx="6" fill="color-mix(in srgb, var(--accent-aqua) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-aqua) 25%, transparent)" stroke-width="1"/>
+        <text x="292" y="146" font-size="11" fill="var(--accent-aqua)" text-anchor="middle" font-weight="500">RBAC 权限检查</text>
+
+        <rect x="202" y="164" width="180" height="28" rx="6" fill="color-mix(in srgb, var(--accent-yellow) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-yellow) 30%, transparent)" stroke-width="1"/>
+        <text x="292" y="182" font-size="11" fill="var(--accent-yellow)" text-anchor="middle" font-weight="500">审计日志记录</text>
+
+        <rect x="202" y="200" width="180" height="28" rx="6" fill="color-mix(in srgb, var(--accent-red) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-red) 25%, transparent)" stroke-width="1"/>
+        <text x="292" y="218" font-size="11" fill="var(--accent-red)" text-anchor="middle" font-weight="500">速率限制 / 性能隔离</text>
+
+        <text x="292" y="246" font-size="10" fill="var(--text-muted)" text-anchor="middle">↓ 携带 tenant_id 向下传递</text>
+
+        <!-- Arrow gateway → app -->
+        <path d="M394,126 L430,126" stroke="#898781" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+        <!-- ===== App layer ===== -->
+        <text x="530" y="36" font-size="11" fill="var(--text-muted)" font-weight="500">SERVICE LAYER</text>
+        <rect x="432" y="46" width="200" height="210" rx="10" fill="var(--surface-1)" stroke="var(--grid)" stroke-width="1" filter="url(#shadow1)"/>
+        <rect x="442" y="56" width="180" height="36" rx="6" fill="color-mix(in srgb, var(--accent-blue) 10%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="532" y="70" font-size="11" fill="var(--text-primary)" text-anchor="middle">Agent 服务</text>
+        <text x="532" y="84" font-size="9" fill="var(--text-muted)" text-anchor="middle">创建 / 部署 / 管理</text>
+
+        <rect x="442" y="100" width="180" height="36" rx="6" fill="color-mix(in srgb, var(--accent-aqua) 10%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="532" y="114" font-size="11" fill="var(--text-primary)" text-anchor="middle">知识库服务</text>
+        <text x="532" y="128" font-size="9" fill="var(--text-muted)" text-anchor="middle">文档 / 检索 / RAG</text>
+
+        <rect x="442" y="144" width="180" height="36" rx="6" fill="color-mix(in srgb, var(--accent-violet) 10%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="532" y="158" font-size="11" fill="var(--text-primary)" text-anchor="middle">对话服务</text>
+        <text x="532" y="172" font-size="9" fill="var(--text-muted)" text-anchor="middle">消息 / 历史 / 导出</text>
+
+        <rect x="442" y="188" width="180" height="36" rx="6" fill="color-mix(in srgb, var(--accent-orange) 10%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="532" y="202" font-size="11" fill="var(--text-primary)" text-anchor="middle">用户管理</text>
+        <text x="532" y="216" font-size="9" fill="var(--text-muted)" text-anchor="middle">邀请 / 角色 / 权限</text>
+
+        <text x="532" y="246" font-size="10" fill="var(--text-muted)" text-anchor="middle">WHERE tenant_id = ctx.tenant_id</text>
+
+        <!-- Arrow app → data -->
+        <path d="M634,126 L670,126" stroke="#898781" stroke-width="1.5" marker-end="url(#arrowGray)"/>
+
+        <!-- ===== Data layer ===== -->
+        <text x="800" y="36" font-size="11" fill="var(--text-muted)" font-weight="500">DATA LAYER</text>
+        <rect x="672" y="46" width="200" height="210" rx="10" fill="var(--surface-1)" stroke="var(--grid)" stroke-width="1" filter="url(#shadow1)"/>
+
+        <!-- PostgreSQL -->
+        <rect x="682" y="56" width="180" height="52" rx="6" fill="color-mix(in srgb, var(--accent-blue) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-blue) 25%, transparent)" stroke-width="1"/>
+        <text x="772" y="74" font-size="11" fill="var(--accent-blue)" text-anchor="middle" font-weight="500">🐘 PostgreSQL</text>
+        <text x="772" y="90" font-size="9" fill="var(--text-muted)" text-anchor="middle">RLS 行级安全策略</text>
+        <text x="772" y="102" font-size="9" fill="var(--text-muted)" text-anchor="middle">USING (tenant_id = current_setting(…))</text>
+
+        <!-- Redis -->
+        <rect x="682" y="116" width="180" height="36" rx="6" fill="color-mix(in srgb, var(--accent-red) 10%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="772" y="132" font-size="11" fill="var(--text-primary)" text-anchor="middle">⚡ Redis</text>
+        <text x="772" y="146" font-size="9" fill="var(--text-muted)" text-anchor="middle">tenants:{id}:cache:{key}</text>
+
+        <!-- Encryption -->
+        <rect x="682" y="160" width="180" height="36" rx="6" fill="color-mix(in srgb, var(--accent-violet) 10%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="772" y="176" font-size="11" fill="var(--text-primary)" text-anchor="middle">🔐 Fernet 加密</text>
+        <text x="772" y="190" font-size="9" fill="var(--text-muted)" text-anchor="middle">每个租户独立派生密钥</text>
+
+        <!-- Audit -->
+        <rect x="682" y="204" width="180" height="36" rx="6" fill="color-mix(in srgb, var(--accent-yellow) 13%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="772" y="220" font-size="11" fill="var(--text-primary)" text-anchor="middle">📋 审计日志</text>
+        <text x="772" y="234" font-size="9" fill="var(--text-muted)" text-anchor="middle">租户级操作追溯</text>
+
+        <!-- ===== Three isolation modes at bottom ===== -->
+        <text x="60" y="310" font-size="11" fill="var(--text-muted)" font-weight="500">隔离模式</text>
+
+        <!-- DB isolation -->
+        <rect x="30" y="322" width="300" height="100" rx="8" fill="var(--surface-1)" stroke="var(--accent-red)" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="180" y="342" font-size="12" fill="var(--accent-red)" text-anchor="middle" font-weight="500">数据库隔离</text>
+        <text x="50" y="358" font-size="10" fill="var(--text-muted)">app-tenant-a → database</text>
+        <text x="50" y="374" font-size="10" fill="var(--text-muted)">app-tenant-b → database</text>
+        <text x="50" y="390" font-size="10" fill="var(--text-muted)">app-tenant-c → database</text>
+        <text x="290" y="408" font-size="9" fill="var(--text-muted)" text-anchor="end">最强隔离 · 最高成本</text>
+
+        <!-- Schema isolation -->
+        <rect x="360" y="322" width="300" height="100" rx="8" fill="var(--surface-1)" stroke="var(--accent-yellow)" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="510" y="342" font-size="12" fill="var(--accent-yellow)" text-anchor="middle" font-weight="500">Schema 隔离</text>
+        <text x="380" y="358" font-size="10" fill="var(--text-muted)">public_db.tenant_a.users</text>
+        <text x="380" y="374" font-size="10" fill="var(--text-muted)">public_db.tenant_b.users</text>
+        <text x="380" y="390" font-size="10" fill="var(--text-muted)">public_db.tenant_c.users</text>
+        <text x="640" y="408" font-size="9" fill="var(--text-muted)" text-anchor="end">隔离性好 · 成本适中</text>
+
+        <!-- RLS -->
+        <rect x="690" y="322" width="300" height="100" rx="8" fill="var(--surface-1)" stroke="var(--accent-aqua)" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="840" y="342" font-size="12" fill="var(--accent-aqua)" text-anchor="middle" font-weight="500">行级隔离 (RLS)</text>
+        <text x="710" y="358" font-size="10" fill="var(--text-muted)">users: id | tenant_id | name</text>
+        <text x="710" y="374" font-size="10" fill="var(--text-muted)">→ WHERE tenant_id = 't001'</text>
+        <text x="710" y="390" font-size="10" fill="var(--text-muted)">→ PostgreSQL RLS 兜底</text>
+        <text x="970" y="408" font-size="9" fill="var(--text-muted)" text-anchor="end">最简单 · 最低成本</text>
+      </svg>
+    </div>
+    <div class="diagram-footer">请求链路：Tenant → JWT 认证 → 中间件（解析/鉴权/审计）→ 服务层 → 数据层（RLS/加密）</div>
+  </div>
+
+  <!-- ===== 4. 认证流程 ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">04</span> JWT 认证与租户识别</div>
+    <p class="section-desc">每个请求携带 tenant_id，中间件逐层传递</p>
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 120" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font);">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#898781"/>
+          </marker>
+        </defs>
+        <rect x="0" y="0" width="960" height="120" rx="8" fill="var(--surface-1)"/>
+
+        <!-- Step 1 -->
+        <rect x="20" y="20" width="120" height="40" rx="6" fill="color-mix(in srgb, var(--accent-blue) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-blue) 30%, transparent)" stroke-width="1"/>
+        <text x="80" y="37" font-size="11" fill="var(--accent-blue)" text-anchor="middle" font-weight="500">① 用户登录</text>
+        <text x="80" y="52" font-size="9" fill="var(--text-muted)" text-anchor="middle">提交凭证</text>
+
+        <text x="150" y="42" font-size="14" fill="var(--text-muted)" text-anchor="middle">→</text>
+
+        <!-- Step 2 -->
+        <rect x="170" y="20" width="130" height="40" rx="6" fill="color-mix(in srgb, var(--accent-violet) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-violet) 25%, transparent)" stroke-width="1"/>
+        <text x="235" y="37" font-size="11" fill="var(--accent-violet)" text-anchor="middle" font-weight="500">② 验证身份</text>
+        <text x="235" y="52" font-size="9" fill="var(--text-muted)" text-anchor="middle">签发 JWT</text>
+
+        <text x="310" y="42" font-size="14" fill="var(--text-muted)" text-anchor="middle">→</text>
+
+        <!-- JWT token detail -->
+        <rect x="330" y="14" width="200" height="52" rx="6" fill="var(--surface-2)" stroke="var(--border)" stroke-width="1" stroke-dasharray="3,2"/>
+        <text x="430" y="32" font-size="10" fill="var(--text-muted)" text-anchor="middle">JWT Token</text>
+        <text x="430" y="46" font-size="9" fill="var(--accent-blue)" text-anchor="middle">user_id</text>
+        <text x="430" y="56" font-size="9" fill="var(--accent-aqua)" text-anchor="middle">tenant_id</text>
+        <text x="430" y="63" font-size="9" fill="var(--text-muted)" text-anchor="middle">role</text>
+
+        <text x="540" y="42" font-size="14" fill="var(--text-muted)" text-anchor="middle">→</text>
+
+        <!-- Step 3 -->
+        <rect x="560" y="20" width="120" height="40" rx="6" fill="color-mix(in srgb, var(--accent-aqua) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-aqua) 30%, transparent)" stroke-width="1"/>
+        <text x="620" y="37" font-size="11" fill="var(--accent-aqua)" text-anchor="middle" font-weight="500">③ 携带 Token</text>
+        <text x="620" y="52" font-size="9" fill="var(--text-muted)" text-anchor="middle">请求头 Bearer</text>
+
+        <text x="690" y="42" font-size="14" fill="var(--text-muted)" text-anchor="middle">→</text>
+
+        <!-- Step 4 -->
+        <rect x="710" y="20" width="130" height="40" rx="6" fill="color-mix(in srgb, var(--accent-yellow) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-yellow) 30%, transparent)" stroke-width="1"/>
+        <text x="775" y="37" font-size="11" fill="var(--accent-yellow)" text-anchor="middle" font-weight="500">④ 中间件解析</text>
+        <text x="775" y="52" font-size="9" fill="var(--text-muted)" text-anchor="middle">提取 tenant_id</text>
+
+        <text x="850" y="42" font-size="14" fill="var(--text-muted)" text-anchor="middle">→</text>
+
+        <!-- Step 5 -->
+        <rect x="870" y="20" width="70" height="40" rx="6" fill="color-mix(in srgb, var(--accent-red) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-red) 25%, transparent)" stroke-width="1"/>
+        <text x="905" y="37" font-size="11" fill="var(--accent-red)" text-anchor="middle" font-weight="500">⑤ 操作</text>
+        <text x="905" y="52" font-size="9" fill="var(--text-muted)" text-anchor="middle">带租户</text>
+
+        <!-- Bottom context -->
+        <text x="480" y="98" font-size="10" fill="var(--text-muted)" text-anchor="middle">Token 结构: { user_id, tenant_id, role, exp } → 签名防止篡改</text>
+        <text x="480" y="112" font-size="10" fill="var(--text-muted)" text-anchor="middle">数据库查询: WHERE tenant_id = ctx.tenant_id (始终携带)</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ===== 5. RBAC 权限模型 ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">05</span> RBAC 权限体系</div>
+    <p class="section-desc">用户 → 角色 → 权限，每个租户拥有独立的角色体系</p>
+    <div class="diagram-container">
+      <svg viewBox="0 0 820 280" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font);">
+        <defs>
+          <marker id="arrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,0 L10,5 L0,10 Z" fill="#898781"/>
+          </marker>
+        </defs>
+        <rect x="0" y="0" width="820" height="280" rx="8" fill="var(--surface-1)"/>
+
+        <!-- Title line -->
+        <text x="410" y="22" font-size="11" fill="var(--text-muted)" text-anchor="middle" font-weight="500">User → Role → Permission</text>
+
+        <!-- ===== Left: Users ===== -->
+        <text x="90" y="46" font-size="11" fill="var(--accent-blue)" text-anchor="middle" font-weight="500">用户</text>
+
+        <rect x="20" y="56" width="140" height="34" rx="6" fill="color-mix(in srgb, var(--accent-blue) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-blue) 30%, transparent)" stroke-width="1"/>
+        <text x="90" y="77" font-size="12" fill="var(--accent-blue)" text-anchor="middle">👤 张三</text>
+
+        <rect x="20" y="98" width="140" height="34" rx="6" fill="color-mix(in srgb, var(--accent-blue) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-blue) 30%, transparent)" stroke-width="1"/>
+        <text x="90" y="119" font-size="12" fill="var(--accent-blue)" text-anchor="middle">👤 李四</text>
+
+        <rect x="20" y="140" width="140" height="34" rx="6" fill="color-mix(in srgb, var(--accent-blue) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-blue) 30%, transparent)" stroke-width="1"/>
+        <text x="90" y="161" font-size="12" fill="var(--accent-blue)" text-anchor="middle">👤 王五</text>
+
+        <!-- Arrows: user → role (same for all three; just draw one representative) -->
+        <path d="M162,73 L210,73" stroke="#898781" stroke-width="1.5" marker-end="url(#arrB)"/>
+        <path d="M162,115 L210,115" stroke="#898781" stroke-width="1.5" marker-end="url(#arrB)"/>
+        <path d="M162,157 L210,157" stroke="#898781" stroke-width="1.5" marker-end="url(#arrB)"/>
+
+        <!-- ===== Center: Roles ===== -->
+        <text x="310" y="46" font-size="11" fill="var(--accent-aqua)" text-anchor="middle" font-weight="500">角色</text>
+
+        <rect x="212" y="56" width="196" height="34" rx="6" fill="color-mix(in srgb, var(--accent-aqua) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-aqua) 30%, transparent)" stroke-width="1"/>
+        <text x="310" y="77" font-size="12" fill="var(--accent-aqua)" text-anchor="middle">🔑 admin</text>
+
+        <rect x="212" y="98" width="196" height="34" rx="6" fill="color-mix(in srgb, var(--accent-aqua) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-aqua) 30%, transparent)" stroke-width="1"/>
+        <text x="310" y="119" font-size="12" fill="var(--accent-aqua)" text-anchor="middle">🔑 editor</text>
+
+        <rect x="212" y="140" width="196" height="34" rx="6" fill="color-mix(in srgb, var(--accent-aqua) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-aqua) 30%, transparent)" stroke-width="1"/>
+        <text x="310" y="161" font-size="12" fill="var(--accent-aqua)" text-anchor="middle">🔑 viewer</text>
+
+        <!-- Role hierarchy arrows -->
+        <path d="M310,92 L310,96" stroke="var(--text-muted)" stroke-width="1" marker-end="url(#arrB)"/>
+        <path d="M310,134 L310,138" stroke="var(--text-muted)" stroke-width="1" marker-end="url(#arrB)"/>
+
+        <!-- Arrows: role → permission -->
+        <path d="M410,73 L478,73" stroke="#898781" stroke-width="1.5" marker-end="url(#arrB)"/>
+        <path d="M410,115 L478,115" stroke="#898781" stroke-width="1.5" marker-end="url(#arrB)"/>
+        <path d="M410,157 L478,157" stroke="#898781" stroke-width="1.5" marker-end="url(#arrB)"/>
+
+        <!-- ===== Right: Permissions ===== -->
+        <text x="660" y="46" font-size="11" fill="var(--accent-violet)" text-anchor="middle" font-weight="500">权限（Admin 示例）</text>
+
+        <rect x="480" y="56" width="160" height="22" rx="4" fill="color-mix(in srgb, var(--accent-violet) 12%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="560" y="71" font-size="10" fill="var(--accent-violet)" text-anchor="middle">agent:create, read, update, delete, deploy</text>
+
+        <rect x="480" y="82" width="160" height="22" rx="4" fill="color-mix(in srgb, var(--accent-violet) 12%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="560" y="97" font-size="10" fill="var(--accent-violet)" text-anchor="middle">kb:create, read, update, delete, upload</text>
+
+        <rect x="480" y="108" width="160" height="22" rx="4" fill="color-mix(in srgb, var(--accent-violet) 12%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="560" y="123" font-size="10" fill="var(--accent-violet)" text-anchor="middle">conversation:read, delete, export</text>
+
+        <rect x="480" y="134" width="160" height="22" rx="4" fill="color-mix(in srgb, var(--accent-violet) 12%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="560" y="149" font-size="10" fill="var(--accent-violet)" text-anchor="middle">user:invite, manage</text>
+
+        <rect x="480" y="160" width="160" height="22" rx="4" fill="color-mix(in srgb, var(--accent-violet) 12%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="560" y="175" font-size="10" fill="var(--accent-violet)" text-anchor="middle">tenant:settings, billing</text>
+
+        <!-- Role-permission scope notes -->
+        <text x="310" y="214" font-size="10" fill="var(--text-muted)" text-anchor="middle">每个租户拥有独立的角色体系</text>
+        <text x="310" y="232" font-size="10" fill="var(--text-muted)" text-anchor="middle">租户 A: Admin, Editor, Viewer</text>
+        <text x="310" y="250" font-size="10" fill="var(--text-muted)" text-anchor="middle">租户 B: Admin, Operator, Auditor</text>
+
+        <!-- Capability line -->
+        <text x="660" y="240" font-size="10" fill="var(--text-muted)" text-anchor="middle">角色层级: viewer(1) &lt; editor(2) &lt; admin(3)</text>
+        <text x="660" y="258" font-size="10" fill="var(--text-muted)" text-anchor="middle">低角色无法访问高角色资源</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ===== 6. 安全层 ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">06</span> 安全加固层</div>
+    <p class="section-desc">多层防护确保端到端的租户安全</p>
+    <div class="diagram-container">
+      <svg viewBox="0 0 840 200" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font);">
+        <rect x="0" y="0" width="840" height="200" rx="8" fill="var(--surface-1)"/>
+
+        <!-- Layer 1: Transport -->
+        <rect x="30" y="16" width="780" height="32" rx="6" fill="color-mix(in srgb, var(--accent-blue) 10%, transparent)" stroke="color-mix(in srgb, var(--accent-blue) 25%, transparent)" stroke-width="1"/>
+        <text x="50" y="37" font-size="12" fill="var(--accent-blue)" font-weight="500">🔒 传输加密</text>
+        <text x="420" y="37" font-size="11" fill="var(--text-secondary)" text-anchor="middle">全链路 HTTPS/TLS — 中间人攻击防护</text>
+
+        <!-- Layer 2: Auth -->
+        <rect x="30" y="54" width="780" height="32" rx="6" fill="color-mix(in srgb, var(--accent-aqua) 10%, transparent)" stroke="color-mix(in srgb, var(--accent-aqua) 20%, transparent)" stroke-width="1"/>
+        <text x="50" y="75" font-size="12" fill="var(--accent-aqua)" font-weight="500">🔑 身份认证</text>
+        <text x="420" y="75" font-size="11" fill="var(--text-secondary)" text-anchor="middle">JWT / Auth0 / Ory Kratos — Token 携带 tenant_id 与 role</text>
+
+        <!-- Layer 3: RBAC -->
+        <rect x="30" y="92" width="780" height="32" rx="6" fill="color-mix(in srgb, var(--accent-violet) 10%, transparent)" stroke="color-mix(in srgb, var(--accent-violet) 20%, transparent)" stroke-width="1"/>
+        <text x="50" y="113" font-size="12" fill="var(--accent-violet)" font-weight="500">📋 RBAC 权限</text>
+        <text x="420" y="113" font-size="11" fill="var(--text-secondary)" text-anchor="middle">角色层级检查 + 权限验证装饰器 — 最小权限原则</text>
+
+        <!-- Layer 4: RLS -->
+        <rect x="30" y="130" width="780" height="32" rx="6" fill="color-mix(in srgb, var(--accent-yellow) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-yellow) 25%, transparent)" stroke-width="1"/>
+        <text x="50" y="151" font-size="12" fill="var(--accent-yellow)" font-weight="500">🗄️ 行级安全 RLS</text>
+        <text x="420" y="151" font-size="11" fill="var(--text-secondary)" text-anchor="middle">PostgreSQL 层面强制执行 — 即使应用层漏传 tenant_id 也无法越权</text>
+
+        <!-- Layer 5: Encryption -->
+        <rect x="30" y="168" width="780" height="24" rx="6" fill="color-mix(in srgb, var(--accent-orange) 12%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="50" y="184" font-size="12" fill="var(--accent-orange)" font-weight="500">🔐 数据加密</text>
+        <text x="420" y="184" font-size="11" fill="var(--text-secondary)" text-anchor="middle">Fernet 每个租户独立派生密钥 + Vault 密钥管理 — 静态数据加密</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ===== 7. 常见陷阱 ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">07</span> 常见陷阱</div>
+    <p class="section-desc">多租户系统最容易出错的地方</p>
+    <div class="diagram-container">
+      <svg viewBox="0 0 960 108" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font);">
+        <rect x="0" y="0" width="960" height="108" rx="8" fill="var(--surface-1)"/>
+
+        <!-- Trap 1 -->
+        <rect x="16" y="14" width="176" height="82" rx="6" fill="color-mix(in srgb, var(--accent-red) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-red) 25%, transparent)" stroke-width="1"/>
+        <text x="104" y="36" font-size="18" text-anchor="middle">🚫</text>
+        <text x="104" y="54" font-size="11" fill="var(--accent-red)" text-anchor="middle" font-weight="500">漏传 tenant_id</text>
+        <text x="104" y="70" font-size="9" fill="var(--text-secondary)" text-anchor="middle">最危险！查询忘记加过滤</text>
+        <text x="104" y="84" font-size="9" fill="var(--text-secondary)" text-anchor="middle">导致数据跨租户泄漏</text>
+
+        <!-- Trap 2 -->
+        <rect x="208" y="14" width="176" height="82" rx="6" fill="color-mix(in srgb, var(--accent-yellow) 15%, transparent)" stroke="color-mix(in srgb, var(--accent-yellow) 28%, transparent)" stroke-width="1"/>
+        <text x="296" y="36" font-size="18" text-anchor="middle">🚫</text>
+        <text x="296" y="54" font-size="11" fill="var(--accent-yellow)" text-anchor="middle" font-weight="500">缓存未隔离</text>
+        <text x="296" y="70" font-size="9" fill="var(--text-secondary)" text-anchor="middle">Redis 忘记加 tenant_id 前缀</text>
+        <text x="296" y="84" font-size="9" fill="var(--text-secondary)" text-anchor="middle">租户缓存互相覆盖</text>
+
+        <!-- Trap 3 -->
+        <rect x="400" y="14" width="176" height="82" rx="6" fill="color-mix(in srgb, var(--accent-violet) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-violet) 25%, transparent)" stroke-width="1"/>
+        <text x="488" y="36" font-size="18" text-anchor="middle">🚫</text>
+        <text x="488" y="54" font-size="11" fill="var(--accent-violet)" text-anchor="middle" font-weight="500">Schema 迁移混乱</text>
+        <text x="488" y="70" font-size="9" fill="var(--text-secondary)" text-anchor="middle">Schema 模式需为每个 Schema</text>
+        <text x="488" y="84" font-size="9" fill="var(--text-secondary)" text-anchor="middle">执行迁移，容易遗漏</text>
+
+        <!-- Trap 4 -->
+        <rect x="592" y="14" width="176" height="82" rx="6" fill="color-mix(in srgb, var(--accent-orange) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-orange) 25%, transparent)" stroke-width="1"/>
+        <text x="680" y="36" font-size="18" text-anchor="middle">🚫</text>
+        <text x="680" y="54" font-size="11" fill="var(--accent-orange)" text-anchor="middle" font-weight="500">连接数耗尽</text>
+        <text x="680" y="70" font-size="9" fill="var(--text-secondary)" text-anchor="middle">独立连接池 × 租户数</text>
+        <text x="680" y="84" font-size="9" fill="var(--text-secondary)" text-anchor="middle">可能超过数据库上限</text>
+
+        <!-- Trap 5 -->
+        <rect x="784" y="14" width="160" height="82" rx="6" fill="color-mix(in srgb, var(--accent-red) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-red) 25%, transparent)" stroke-width="1"/>
+        <text x="864" y="36" font-size="18" text-anchor="middle">🚫</text>
+        <text x="864" y="54" font-size="11" fill="var(--accent-red)" text-anchor="middle" font-weight="500">备份遗漏</text>
+        <text x="864" y="70" font-size="9" fill="var(--text-secondary)" text-anchor="middle">忘记为新租户</text>
+        <text x="864" y="84" font-size="9" fill="var(--text-secondary)" text-anchor="middle">配置自动备份</text>
+      </svg>
+    </div>
+  </div>
+
+  <!-- ===== 8. 技术关系 ===== -->
+  <div class="section">
+    <div class="section-title"><span class="num">08</span> 技术栈关系</div>
+    <p class="section-desc">各层之间的依赖与职责划分</p>
+    <div class="diagram-container">
+      <svg viewBox="0 0 860 130" xmlns="http://www.w3.org/2000/svg" style="font-family:var(--font);">
+        <defs>
+          <marker id="arrUp" viewBox="0 0 10 10" refX="5" refY="9" markerWidth="6" markerHeight="6" orient="auto">
+            <path d="M0,10 L5,0 L10,10 Z" fill="#898781"/>
+          </marker>
+        </defs>
+
+        <rect x="0" y="0" width="860" height="130" rx="8" fill="var(--surface-1)"/>
+
+        <!-- Top layer -->
+        <rect x="20" y="10" width="180" height="48" rx="6" fill="color-mix(in srgb, var(--accent-blue) 12%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="110" y="30" font-size="11" fill="var(--accent-blue)" text-anchor="middle" font-weight="500">上层：业务 API</text>
+        <text x="110" y="46" font-size="9" fill="var(--text-muted)" text-anchor="middle">多租户 CRUD 操作</text>
+
+        <!-- Arrow -->
+        <path d="M110,60 L110,66" stroke="#898781" stroke-width="1.5" marker-end="url(#arrUp)"/>
+
+        <!-- Middle layer -->
+        <rect x="20" y="68" width="180" height="48" rx="6" fill="color-mix(in srgb, var(--accent-aqua) 12%, transparent)" stroke="color-mix(in srgb, var(--accent-aqua) 25%, transparent)" stroke-width="1"/>
+        <text x="110" y="88" font-size="11" fill="var(--accent-aqua)" text-anchor="middle" font-weight="500">本层：RBAC + RLS</text>
+        <text x="110" y="104" font-size="9" fill="var(--text-muted)" text-anchor="middle">权限检查 + 数据隔离</text>
+
+        <!-- Arrow -->
+        <path d="M110,118 L110,124" stroke="#898781" stroke-width="1.5" marker-end="url(#arrUp)"/>
+
+        <!-- Bottom layer -->
+        <rect x="20" y="68" width="180" height="48" rx="6" fill="transparent" stroke="none" stroke-width="0"/>
+        <!-- moved bottom above -->
+
+        <!-- Right side: supporting services -->
+        <rect x="260" y="10" width="130" height="36" rx="6" fill="color-mix(in srgb, var(--accent-violet) 10%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="325" y="33" font-size="11" fill="var(--text-primary)" text-anchor="middle">🔐 JWT / Auth0 / Ory</text>
+
+        <rect x="410" y="10" width="130" height="36" rx="6" fill="color-mix(in srgb, var(--accent-yellow) 12%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="475" y="33" font-size="11" fill="var(--text-primary)" text-anchor="middle">📋 审计日志</text>
+
+        <rect x="560" y="10" width="130" height="36" rx="6" fill="color-mix(in srgb, var(--accent-red) 10%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="625" y="33" font-size="11" fill="var(--text-primary)" text-anchor="middle">🔐 Fernet / Vault</text>
+
+        <rect x="710" y="10" width="130" height="36" rx="6" fill="color-mix(in srgb, var(--accent-orange) 10%, transparent)" stroke="var(--border)" stroke-width="1"/>
+        <text x="775" y="33" font-size="11" fill="var(--text-primary)" text-anchor="middle">⚡ Rate Limiting</text>
+
+        <text x="325" y="70" font-size="10" fill="var(--text-muted)" text-anchor="middle">身份认证</text>
+        <text x="475" y="70" font-size="10" fill="var(--text-muted)" text-anchor="middle">操作追溯</text>
+        <text x="625" y="70" font-size="10" fill="var(--text-muted)" text-anchor="middle">数据加密</text>
+        <text x="775" y="70" font-size="10" fill="var(--text-muted)" text-anchor="middle">性能隔离</text>
+
+        <!-- Bottom connectors -->
+        <rect x="260" y="85" width="580" height="28" rx="6" fill="var(--surface-2)" stroke="var(--grid)" stroke-width="1"/>
+        <text x="550" y="103" font-size="11" fill="var(--text-primary)" text-anchor="middle">下层：PostgreSQL + Redis → 数据存储与缓存</text>
+      </svg>
+    </div>
+
+    <!-- Best practices text table -->
+    <div style="margin-top:16px; display:grid; grid-template-columns: 1fr 1fr; gap:12px; font-size:13px;">
+      <div style="background:var(--surface-2); border:1px solid var(--grid); border-radius:8px; padding:14px 16px;">
+        <div style="font-weight:600; margin-bottom:6px;">✅ 最佳实践</div>
+        <ul style="list-style:none; color:var(--text-secondary); padding:0;">
+          <li style="padding:2px 0;">· tenant_id 复合索引</li>
+          <li style="padding:2px 0;">· 始终 WHERE tenant_id = …</li>
+          <li style="padding:2px 0;">· Redis 前缀 tenent:{id}:…</li>
+          <li style="padding:2px 0;">· API Key 定期轮转</li>
+        </ul>
+      </div>
+      <div style="background:var(--surface-2); border:1px solid var(--grid); border-radius:8px; padding:14px 16px;">
+        <div style="font-weight:600; margin-bottom:6px;">📋 合规要求</div>
+        <ul style="list-style:none; color:var(--text-secondary); padding:0;">
+          <li style="padding:2px 0;">· 日志保留 ≥ 90 天</li>
+          <li style="padding:2px 0;">· 数据驻留本地化</li>
+          <li style="padding:2px 0;">· 租户数据可导出</li>
+          <li style="padding:2px 0;">· 删除前多次确认</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== Footer ===== -->
+  <div style="margin-top:48px; padding-top:24px; border-top:1px solid var(--grid); text-align:center;">
+    <p style="font-size:13px; color:var(--text-muted);">
+      多租户权限 · Agent 平台安全架构 · Phase 03 — Platform
+    </p>
+  </div>
+
+</div>
+</body>
+</html>
